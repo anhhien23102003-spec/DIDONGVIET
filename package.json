@@ -1,0 +1,10 @@
+{
+  "name": "didongviet",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "npm install --prefix backend",
+    "postinstall": "npm install --prefix backend",
+    "start": "node backend/server.js"
+  }
+}
