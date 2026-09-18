@@ -1,0 +1,41 @@
+name: Docker CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/genz-phone-landingpage:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/genz-phone-landingpage:${{ github.sha }}
+
+      - name: Smoke test container
+        run: |
+          docker run -d --name genz-phone-landingpage -p 5000:5000 ${{ secrets.DOCKERHUB_USERNAME }}/genz-phone-landingpage:latest
+          sleep 10
+          curl -f http://localhost:5000

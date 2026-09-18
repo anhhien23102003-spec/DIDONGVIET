@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Di Động Việt - Chuyển Giao Giá Trị Vượt Trội | Điện thoại, Tablet, MacBook Chính Hãng</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- TOP PROMO BANNER -->
+  <div class="top-promo-banner">
+    <div class="container top-promo-content">
+      <span>🔥 <strong>DI ĐỘNG VIỆT - CHUYỂN GIAO GIÁ TRỊ VƯỢT TRỘI:</strong> Cam kết 100% chính hãng VN/A - Bảo hành 1 đổi 1 trong 33 ngày - Thu cũ trợ giá đến 5.000.000đ!</span>
+      <div class="top-promo-links">
+        <a href="#tradein-section"><i class="fa-solid fa-arrows-rotate"></i> Thu Cũ Đổi Mới</a>
+        <a href="#stores-section"><i class="fa-solid fa-location-dot"></i> 50+ Cửa hàng</a>
+        <a href="tel:18006018"><i class="fa-solid fa-phone"></i> Hotline: 1800.6018</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN HEADER -->
+  <header class="main-header sticky-header">
+    <div class="container header-wrap">
+      <!-- LOGO -->
+      <a href="#" class="brand-logo" onclick="switchCustomerTab('home'); return false;">
+        <div class="logo-badge">
+          <span class="logo-didong">DI ĐỘNG</span>
+          <span class="logo-viet">VIỆT</span>
+        </div>
+        <span class="logo-slogan">CHUYỂN GIAO GIÁ TRỊ VƯỢT TRỘI</span>
+      </a>
+
+      <!-- SEARCH BAR WITH LIVE SEARCH -->
+      <div class="search-box-wrap">
+        <div class="search-input-group">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="searchInput" placeholder="Bạn cần tìm điện thoại, laptop, phụ kiện gì hôm nay?..." autocomplete="off">
+          <button class="btn-clear-search" id="clearSearchBtn" style="display: none;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <!-- Live Search Dropdown Results -->
+        <div class="live-search-dropdown" id="liveSearchDropdown"></div>
+      </div>
+
+      <!-- HEADER ACTIONS -->
+      <div class="header-actions">
+        <!-- Hotline -->
+        <a href="tel:18006018" class="header-action-btn">
+          <i class="fa-solid fa-headset"></i>
+          <div class="action-text">
+            <span class="sub">Tư vấn miễn phí</span>
+            <strong>1800.6018</strong>
+          </div>
+        </a>
+
+        <!-- Cửa hàng -->
+        <button class="header-action-btn" onclick="openModal('storesModal')">
+          <i class="fa-solid fa-shop"></i>
+          <div class="action-text">
+            <span class="sub">Hệ thống</span>
+            <strong>Cửa hàng</strong>
+          </div>
+        </button>
+
+        <!-- Tra cứu đơn hàng -->
+        <button class="header-action-btn" onclick="openModal('orderLookupModal')">
+          <i class="fa-solid fa-truck-fast"></i>
+          <div class="action-text">
+            <span class="sub">Tra cứu</span>
+            <strong>Đơn hàng</strong>
+          </div>
+        </button>
+
+        <!-- Giỏ hàng -->
+        <button class="header-action-btn btn-cart" onclick="toggleCartDrawer()">
+          <div class="cart-icon-wrap">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span class="cart-badge" id="cartCountBadge">0</span>
+          </div>
+          <div class="action-text">
+            <span class="sub">Giỏ hàng</span>
+            <strong id="cartHeaderTotal">0đ</strong>
+          </div>
+        </button>
+
+        <!-- Tài khoản -->
+        <button class="header-action-btn btn-auth" onclick="openModal('authModal')">
+          <i class="fa-solid fa-circle-user"></i>
+          <div class="action-text" id="userHeaderAction">
+            <span class="sub">Xin chào</span>
+            <strong>Tài khoản</strong>
+          </div>
+        </button>
+
+        <!-- NÚT CHUYỂN SANG ADMIN -->
+        <button class="btn-admin-switch" onclick="toggleAdminView()">
+          <i class="fa-solid fa-gauge-high"></i>
+          <span id="adminSwitchLabel">Quản Trị Admin</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- MEGA NAVIGATION BAR -->
+    <nav class="main-navbar">
+      <div class="container nav-wrap">
+        <ul class="nav-list">
+          <li class="nav-item active" data-category="all" onclick="filterByCategory('all', this)">
+            <i class="fa-solid fa-border-all"></i> Tất cả
+          </li>
+          <li class="nav-item" data-category="phone" onclick="filterByCategory('phone', this)">
+            <i class="fa-solid fa-mobile-screen-button"></i> Điện thoại
+          </li>
+          <li class="nav-item" data-category="laptop" onclick="filterByCategory('laptop', this)">
+            <i class="fa-solid fa-laptop"></i> MacBook & Laptop
+          </li>
+          <li class="nav-item" data-category="tablet" onclick="filterByCategory('tablet', this)">
+            <i class="fa-solid fa-tablet-screen-button"></i> Tablet & iPad
+          </li>
+          <li class="nav-item" data-category="apple" onclick="filterByCategory('apple', this)">
+            <i class="fa-brands fa-apple"></i> Hệ sinh thái Apple
+          </li>
+          <li class="nav-item" data-category="old" onclick="filterByCategory('old', this)">
+            <i class="fa-solid fa-box-open"></i> Máy cũ Like New
+          </li>
+          <li class="nav-item" data-category="accessory" onclick="filterByCategory('accessory', this)">
+            <i class="fa-solid fa-plug"></i> Phụ kiện
+          </li>
+          <li class="nav-item" data-category="watch" onclick="filterByCategory('watch', this)">
+            <i class="fa-solid fa-clock"></i> Đồng hồ
+          </li>
+          <li class="nav-item" data-category="audio" onclick="filterByCategory('audio', this)">
+            <i class="fa-solid fa-headphones"></i> Âm thanh
+          </li>
+          <li class="nav-item highlight" onclick="scrollToSection('tradein-section')">
+            <i class="fa-solid fa-rotate"></i> Thu Cũ Đổi Mới
+          </li>
+          <li class="nav-item flash-item" onclick="scrollToSection('flash-sale-section')">
+            <i class="fa-solid fa-bolt"></i> Flash Sale
+          </li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ==================== CUSTOMER VIEW WRAPPER ==================== -->
+  <main id="customerView" class="view-section active">
+
+    <!-- HERO SECTION & BANNERS -->
+    <section class="hero-section">
+      <div class="container hero-grid">
+        <!-- Main Banner Slider -->
+        <div class="hero-slider-container">
+          <div class="slider-track" id="heroSliderTrack">
+            <!-- Slide 1 -->
+            <div class="hero-slide active">
+              <div class="slide-content">
+                <span class="slide-tag">✨ SIÊU PHẨM CÔNG NGHỆ 2025 - 2026</span>
+                <h1>iPhone 16 Pro Max</h1>
+                <p class="slide-sub">Camera Control đột phá - Nâng tầm trí tuệ Apple Intelligence</p>
+                <div class="slide-price-box">
+                  <span class="slide-price">34.490.000đ</span>
+                  <span class="slide-old-price">36.990.000đ</span>
+                  <span class="slide-discount">-2.500.000đ</span>
+                </div>
+                <div class="slide-benefits">
+                  <span><i class="fa-solid fa-check"></i> Trợ giá Thu cũ đến 2 Triệu</span>
+                  <span><i class="fa-solid fa-check"></i> Trả góp 0% 0đ trả trước</span>
+                </div>
+                <div class="slide-actions">
+                  <button class="btn-hero-primary" onclick="quickViewProduct('prod-001')">Mua Ngay Giá Sốc</button>
+                  <button class="btn-hero-secondary" onclick="scrollToSection('catalog-section')">Xem Tất Cả Máy</button>
+                </div>
+              </div>
+              <div class="slide-img">
+                <img src="https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600&auto=format&fit=crop&q=80" alt="iPhone 16 Pro Max">
+              </div>
+            </div>
+
+            <!-- Slide 2 -->
+            <div class="hero-slide">
+              <div class="slide-content">
+                <span class="slide-tag">🤖 GALAXY AI THẾ HỆ MỚI</span>
+                <h1>Samsung Galaxy S25 Ultra</h1>
+                <p class="slide-sub">Snapdragon 8 Elite cực đỉnh - Camera 200MP Zoom 100x</p>
+                <div class="slide-price-box">
+                  <span class="slide-price">32.990.000đ</span>
+                  <span class="slide-old-price">36.990.000đ</span>
+                  <span class="slide-discount">-4.000.000đ</span>
+                </div>
+                <div class="slide-benefits">
+                  <span><i class="fa-solid fa-check"></i> Tặng tai nghe Galaxy Buds 3</span>
+                  <span><i class="fa-solid fa-check"></i> Bảo hành Care+ 12 tháng</span>
+                </div>
+                <div class="slide-actions">
+                  <button class="btn-hero-primary" onclick="quickViewProduct('prod-003')">Khám Phá Galaxy AI</button>
+                  <button class="btn-hero-secondary" onclick="filterByBrand('Samsung')">Xem Dòng Galaxy</button>
+                </div>
+              </div>
+              <div class="slide-img">
+                <img src="https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=600&auto=format&fit=crop&q=80" alt="Galaxy S25 Ultra">
+              </div>
+            </div>
+
+            <!-- Slide 3 -->
+            <div class="hero-slide">
+              <div class="slide-content">
+                <span class="slide-tag">💻 HIỆU NĂNG M3 ĐỈNH CAO</span>
+                <h1>MacBook Air 13 inch M3</h1>
+                <p class="slide-sub">Mỏng nhẹ chỉ 1.24kg - Pin bền bỉ 18 tiếng lướt web</p>
+                <div class="slide-price-box">
+                  <span class="slide-price">25.490.000đ</span>
+                  <span class="slide-old-price">27.990.000đ</span>
+                  <span class="slide-discount">Ưu đãi HSSV</span>
+                </div>
+                <div class="slide-benefits">
+                  <span><i class="fa-solid fa-check"></i> Giảm thêm 500k cho HSSV</span>
+                  <span><i class="fa-solid fa-check"></i> Tặng Balo Laptop cao cấp</span>
+                </div>
+                <div class="slide-actions">
+                  <button class="btn-hero-primary" onclick="quickViewProduct('prod-007')">Sắm Ngay Đi Học</button>
+                  <button class="btn-hero-secondary" onclick="filterByCategory('laptop')">Xem MacBook Khác</button>
+                </div>
+              </div>
+              <div class="slide-img">
+                <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&auto=format&fit=crop&q=80" alt="MacBook Air M3">
+              </div>
+            </div>
+
+            <!-- Slide 4 -->
+            <div class="hero-slide">
+              <div class="slide-content">
+                <span class="slide-tag">🎧 HỆ SINH THÁI APPLE CHÍNH HÃNG</span>
+                <h1>iPad Pro M4 & AirPods Pro 2</h1>
+                <p class="slide-sub">Màn hình OLED Tandem siêu mỏng và tai nghe chống ồn đỉnh cao</p>
+                <div class="slide-price-box">
+                  <span class="slide-price">26.990.000đ</span>
+                  <span class="slide-old-price">28.990.000đ</span>
+                  <span class="slide-discount">Trợ giá 2 Tr</span>
+                </div>
+                <div class="slide-benefits">
+                  <span><i class="fa-solid fa-check"></i> Trả góp 0% qua Home Credit / Thẻ</span>
+                  <span><i class="fa-solid fa-check"></i> Bảo hành 1 đổi 1 trong 33 ngày</span>
+                </div>
+                <div class="slide-actions">
+                  <button class="btn-hero-primary" onclick="quickViewProduct('prod-009')">Xem iPad Pro M4</button>
+                  <button class="btn-hero-secondary" onclick="quickViewProduct('prod-014')">Xem AirPods Pro 2</button>
+                </div>
+              </div>
+              <div class="slide-img">
+                <img src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=600&auto=format&fit=crop&q=80" alt="iPad Pro M4">
+              </div>
+            </div>
+          </div>
+
+          <!-- Slider Controls -->
+          <button class="slider-btn prev" onclick="prevHeroSlide()"><i class="fa-solid fa-chevron-left"></i></button>
+          <button class="slider-btn next" onclick="nextHeroSlide()"><i class="fa-solid fa-chevron-right"></i></button>
+          <div class="slider-dots" id="heroSliderDots">
+            <span class="dot active" onclick="goToHeroSlide(0)"></span>
+            <span class="dot" onclick="goToHeroSlide(1)"></span>
+            <span class="dot" onclick="goToHeroSlide(2)"></span>
+            <span class="dot" onclick="goToHeroSlide(3)"></span>
+          </div>
+        </div>
+
+        <!-- Side Promo Banners -->
+        <div class="hero-side-banners">
+          <div class="side-banner-card tradein-card" onclick="scrollToSection('tradein-section')">
+            <div class="card-icon"><i class="fa-solid fa-arrows-rotate"></i></div>
+            <div class="card-info">
+              <h4>Thu Cũ Đổi Mới</h4>
+              <p>Trợ giá thu lại đến <strong>5.000.000đ</strong></p>
+              <span class="link-label">Định giá ngay <i class="fa-solid fa-arrow-right"></i></span>
+            </div>
+          </div>
+
+          <div class="side-banner-card warranty-card" onclick="openModal('policyModal')">
+            <div class="card-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="card-info">
+              <h4>Bảo Hành Vượt Trội</h4>
+              <p><strong>1 Đổi 1 trong 33 ngày</strong> máy lỗi phần cứng</p>
+              <span class="link-label">Xem chính sách <i class="fa-solid fa-arrow-right"></i></span>
+            </div>
+          </div>
+
+          <div class="side-banner-card delivery-card" onclick="openModal('storesModal')">
+            <div class="card-icon"><i class="fa-solid fa-truck-bolt"></i></div>
+            <div class="card-info">
+              <h4>Giao Siêu Tốc 1H</h4>
+              <p>Miễn phí giao hàng nội thành các quận</p>
+              <span class="link-label">Tra cứu cửa hàng <i class="fa-solid fa-arrow-right"></i></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOUR VALUE COMMITMENTS -->
+    <section class="commitments-bar">
+      <div class="container commitments-grid">
+        <div class="commit-item">
+          <div class="commit-icon"><i class="fa-solid fa-certificate"></i></div>
+          <div class="commit-text">
+            <strong>100% CHÍNH HÃNG VN/A</strong>
+            <span>Đại lý ủy quyền chính thức Apple & Samsung</span>
+          </div>
+        </div>
+        <div class="commit-item">
+          <div class="commit-icon"><i class="fa-solid fa-rotate-left"></i></div>
+          <div class="commit-text">
+            <strong>1 ĐỔI 1 TRONG 33 NGÀY</strong>
+            <span>Đặc quyền bảo hành vượt trội duy nhất tại Di Động Việt</span>
+          </div>
+        </div>
+        <div class="commit-item">
+          <div class="commit-icon"><i class="fa-solid fa-credit-card"></i></div>
+          <div class="commit-text">
+            <strong>TRẢ GÓP 0% LÃI SUẤT</strong>
+            <span>0đ trả trước, duyệt hồ sơ nhanh qua CCCD</span>
+          </div>
+        </div>
+        <div class="commit-item">
+          <div class="commit-icon"><i class="fa-solid fa-rocket"></i></div>
+          <div class="commit-text">
+            <strong>GIAO HÀNG HỎA TỐC 1H</strong>
+            <span>Nhận máy tận tay, hỗ trợ cài đặt dữ liệu miễn phí</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FLASH SALE SECTION -->
+    <section class="flash-sale-section" id="flash-sale-section">
+      <div class="container">
+        <div class="flash-sale-header">
+          <div class="flash-title">
+            <i class="fa-solid fa-fire flash-fire"></i>
+            <h2>FLASH SALE GIÁ SỐC</h2>
+            <span class="flash-badge">CHỈ TRONG HÔM NAY</span>
+          </div>
+          <div class="flash-countdown">
+            <span>Kết thúc trong:</span>
+            <div class="timer-box">
+              <span class="time-block" id="timerHours">08</span> :
+              <span class="time-block" id="timerMinutes">45</span> :
+              <span class="time-block" id="timerSeconds">30</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flash-products-grid" id="flashSaleContainer">
+          <!-- Rendered via JavaScript -->
+        </div>
+      </div>
+    </section>
+
+    <!-- MAIN PRODUCT CATALOG & FILTER SECTION -->
+    <section class="catalog-section" id="catalog-section">
+      <div class="container">
+        <!-- Section title -->
+        <div class="catalog-header">
+          <div>
+            <h2 class="section-heading" id="catalogSectionTitle">Danh Sách Sản Phẩm Nổi Bật</h2>
+            <p class="section-sub">Khám phá các thiết bị công nghệ chính hãng giá tốt nhất tại Di Động Việt</p>
+          </div>
+          <div class="catalog-stats">
+            <span id="productResultCount">Đang hiển thị 20 sản phẩm</span>
+          </div>
+        </div>
+
+        <!-- FILTER BAR -->
+        <div class="filter-controls-card">
+          <!-- Brands filter -->
+          <div class="filter-row">
+            <span class="filter-label"><i class="fa-solid fa-tag"></i> Thương hiệu:</span>
+            <div class="filter-pills" id="brandPillsContainer">
+              <button class="pill active" onclick="filterByBrand('all', this)">Tất cả</button>
+              <button class="pill" onclick="filterByBrand('Apple', this)">Apple</button>
+              <button class="pill" onclick="filterByBrand('Samsung', this)">Samsung</button>
+              <button class="pill" onclick="filterByBrand('Xiaomi', this)">Xiaomi</button>
+              <button class="pill" onclick="filterByBrand('Marshall', this)">Marshall</button>
+              <button class="pill" onclick="filterByBrand('Anker', this)">Anker</button>
+              <button class="pill" onclick="filterByBrand('Baseus', this)">Baseus</button>
+            </div>
+          </div>
+
+          <!-- Price filter & Sort row -->
+          <div class="filter-row filter-row-between">
+            <div class="filter-subrow">
+              <span class="filter-label"><i class="fa-solid fa-coins"></i> Mức giá:</span>
+              <div class="filter-pills" id="pricePillsContainer">
+                <button class="pill active" onclick="filterByPrice(0, 999999999, this)">Tất cả</button>
+                <button class="pill" onclick="filterByPrice(0, 5000000, this)">Dưới 5 triệu</button>
+                <button class="pill" onclick="filterByPrice(5000000, 15000000, this)">5 - 15 triệu</button>
+                <button class="pill" onclick="filterByPrice(15000000, 25000000, this)">15 - 25 triệu</button>
+                <button class="pill" onclick="filterByPrice(25000000, 999999999, this)">Trên 25 triệu</button>
+              </div>
+            </div>
+
+            <div class="sort-box">
+              <label for="sortSelect"><i class="fa-solid fa-arrow-down-short-wide"></i> Sắp xếp:</label>
+              <select id="sortSelect" onchange="handleSortChange(this.value)">
+                <option value="sales">🔥 Bán chạy nhất</option>
+                <option value="price-asc">Giá tăng dần</option>
+                <option value="price-desc">Giá giảm dần</option>
+                <option value="discount">Giảm giá nhiều nhất</option>
+                <option value="rating">Đánh giá cao nhất</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- PRODUCT GRID -->
+        <div class="products-grid" id="mainProductsGrid">
+          <!-- Rendered via JavaScript -->
+        </div>
+      </div>
+    </section>
+
+    <!-- THU CŨ ĐỔI MỚI (TRADE-IN INTERACTIVE VALUATION SECTION) -->
+    <section class="tradein-section" id="tradein-section">
+      <div class="container">
+        <div class="tradein-card-box">
+          <div class="tradein-header">
+            <div class="tradein-badge">🔄 ĐẶC QUYỀN DI ĐỘNG VIỆT</div>
+            <h2>Thu Cũ Đổi Mới - Trợ Giá Đến 5.000.000đ</h2>
+            <p>Định giá máy cũ nhanh chóng trong 30 giây - Lên đời iPhone 16 / Galaxy S25 ngay không cần bù tiền nhiều!</p>
+          </div>
+
+          <form id="tradeInForm" class="tradein-wizard">
+            <div class="wizard-steps-grid">
+              <!-- Bước 1: Chọn hãng & Model -->
+              <div class="step-card">
+                <div class="step-title">
+                  <span class="step-num">1</span>
+                  <strong>Chọn thiết bị cũ của bạn</strong>
+                </div>
+                <div class="form-group">
+                  <label>Hãng máy:</label>
+                  <select id="tradeInBrand" onchange="handleTradeInBrandChange()">
+                    <option value="Apple">Apple (iPhone, iPad, Mac)</option>
+                    <option value="Samsung">Samsung Galaxy</option>
+                    <option value="Xiaomi">Xiaomi / Redmi</option>
+                    <option value="Other">Hãng khác</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Dòng máy & Dung lượng:</label>
+                  <select id="tradeInModel" onchange="calculateTradeInEstimate()">
+                    <!-- Options populated via JS -->
+                  </select>
+                </div>
+              </div>
+
+              <!-- Bước 2: Tình trạng máy -->
+              <div class="step-card">
+                <div class="step-title">
+                  <span class="step-num">2</span>
+                  <strong>Tình trạng máy hiện tại</strong>
+                </div>
+                <div class="form-group">
+                  <label>Ngoại hình máy:</label>
+                  <select id="tradeInCondition" onchange="calculateTradeInEstimate()">
+                    <option value="1.0">Loại 1: Đẹp như mới 99%, không cấn móp</option>
+                    <option value="0.88">Loại 2: Trầy xước nhẹ viền máy</option>
+                    <option value="0.75">Loại 3: Cấn móp nhẹ, xước dăm</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Tình trạng màn hình & Pin:</label>
+                  <select id="tradeInScreen" onchange="calculateTradeInEstimate()">
+                    <option value="1.0">Màn hình zin, pin > 85%, chức năng 100%</option>
+                    <option value="0.9">Màn hình đẹp, pin dưới 85%</option>
+                    <option value="0.8">Đã từng thay pin hoặc kính linh kiện</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Bước 3: Định giá & Đặt lịch -->
+              <div class="step-card highlight-step">
+                <div class="step-title">
+                  <span class="step-num">3</span>
+                  <strong>Giá thu ước tính</strong>
+                </div>
+                <div class="valuation-result-box">
+                  <div class="val-row">
+                    <span>Giá thu máy cũ:</span>
+                    <strong id="tradeInBasePrice">15.500.000đ</strong>
+                  </div>
+                  <div class="val-row subsidy-row">
+                    <span>Trợ giá Di Động Việt:</span>
+                    <strong class="text-success">+ 2.000.000đ</strong>
+                  </div>
+                  <div class="val-divider"></div>
+                  <div class="val-total-row">
+                    <span>Tổng tiền thu lại:</span>
+                    <span class="val-final-price" id="tradeInFinalPrice">17.500.000đ</span>
+                  </div>
+                </div>
+
+                <!-- Customer form inputs -->
+                <div class="tradein-contact-inputs">
+                  <input type="text" id="tradeInName" placeholder="Họ và tên của bạn..." required>
+                  <input type="tel" id="tradeInPhone" placeholder="Số điện thoại nhận tư vấn..." required>
+                  <select id="tradeInStoreSelect">
+                    <option value="77 Trần Quang Khải, Q.1, TP.HCM">77 Trần Quang Khải, Quận 1, TP.HCM</option>
+                    <option value="217 Bà Hom, Q.6, TP.HCM">217 Bà Hom, Quận 6, TP.HCM</option>
+                    <option value="116 Thái Hà, Đống Đa, Hà Nội">116 Thái Hà, Đống Đa, Hà Nội</option>
+                    <option value="60 Hàm Nghi, Thanh Khê, Đà Nẵng">60 Hàm Nghi, Thanh Khê, Đà Nẵng</option>
+                  </select>
+                  <button type="submit" class="btn-tradein-submit">Đặt Lịch Thu Cũ Ngay 🚀</button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- HỆ THỐNG CỬA HÀNG PREVIEW SECTION -->
+    <section class="stores-preview-section" id="stores-section">
+      <div class="container">
+        <div class="stores-preview-header">
+          <div>
+            <h2 class="section-heading">Hệ Thống 50+ Cửa Hàng Di Động Việt</h2>
+            <p class="section-sub">Đến trực tiếp trải nghiệm máy, dịch vụ thu cũ và mua hàng giao ngay trong 1 giờ</p>
+          </div>
+          <button class="btn-outline-primary" onclick="openModal('storesModal')">Xem Tất Cả Chi Nhánh <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+
+        <div class="stores-quick-cards-grid" id="storesQuickList">
+          <!-- Rendered via JavaScript -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== ADMIN VIEW WRAPPER ==================== -->
+  <main id="adminView" class="view-section admin-portal-wrap" style="display: none;">
+    <div class="admin-container">
+      <!-- Admin Sidebar -->
+      <aside class="admin-sidebar">
+        <div class="admin-sidebar-header">
+          <div class="admin-logo">
+            <span class="badge-admin">ADMIN HUB</span>
+            <h3>Di Động Việt</h3>
+          </div>
+          <button class="btn-exit-admin" onclick="toggleAdminView()" title="Quay về trang khách hàng">
+            <i class="fa-solid fa-arrow-left"></i> Về Shop
+          </button>
+        </div>
+
+        <ul class="admin-nav-menu">
+          <li class="admin-nav-item active" onclick="switchAdminTab('dashboard', this)">
+            <i class="fa-solid fa-chart-pie"></i> Tổng quan Dashboard
+          </li>
+          <li class="admin-nav-item" onclick="switchAdminTab('products', this)">
+            <i class="fa-solid fa-boxes-stacked"></i> Quản lý Sản phẩm
+          </li>
+          <li class="admin-nav-item" onclick="switchAdminTab('orders', this)">
+            <i class="fa-solid fa-file-invoice-dollar"></i> Quản lý Đơn hàng
+            <span class="admin-badge-count" id="adminPendingOrdersBadge">1</span>
+          </li>
+          <li class="admin-nav-item" onclick="switchAdminTab('customers', this)">
+            <i class="fa-solid fa-users"></i> Quản lý Khách hàng
+          </li>
+          <li class="admin-nav-item" onclick="switchAdminTab('tradein', this)">
+            <i class="fa-solid fa-arrows-rotate"></i> Hồ sơ Thu cũ đổi mới
+          </li>
+          <li class="admin-nav-item" onclick="switchAdminTab('vouchers', this)">
+            <i class="fa-solid fa-ticket"></i> Khuyến mãi & Voucher
+          </li>
+        </ul>
+
+        <div class="admin-user-info">
+          <div class="admin-avatar"><i class="fa-solid fa-user-shield"></i></div>
+          <div>
+            <strong>Super Admin DDV</strong>
+            <span>admin@didongviet.vn</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Admin Main Content Area -->
+      <section class="admin-main-body">
+        <!-- TOPBAR -->
+        <div class="admin-topbar">
+          <h2 id="adminCurrentTabTitle">Dashboard Tổng Quan</h2>
+          <div class="admin-topbar-actions">
+            <button class="btn-admin-action" onclick="refreshAdminData()"><i class="fa-solid fa-arrows-rotate"></i> Làm mới</button>
+            <button class="btn-admin-action btn-primary-admin" onclick="openAddProductModal()"><i class="fa-solid fa-plus"></i> Thêm Sản Phẩm Mới</button>
+          </div>
+        </div>
+
+        <!-- TAB 1: DASHBOARD -->
+        <div id="adminTab-dashboard" class="admin-tab-pane active">
+          <!-- KPI Cards -->
+          <div class="admin-kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-icon revenue"><i class="fa-solid fa-money-bill-wave"></i></div>
+              <div class="kpi-info">
+                <span>Tổng Doanh Thu</span>
+                <h3 id="adminTotalRevenue">0đ</h3>
+                <small class="text-success"><i class="fa-solid fa-arrow-trend-up"></i> +18.5% so với tuần trước</small>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon orders"><i class="fa-solid fa-cart-shopping"></i></div>
+              <div class="kpi-info">
+                <span>Tổng Đơn Hàng</span>
+                <h3 id="adminTotalOrders">0</h3>
+                <small id="adminPendingOrdersText">0 đơn chờ xác nhận</small>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon customers"><i class="fa-solid fa-users"></i></div>
+              <div class="kpi-info">
+                <span>Khách Hàng Đã Mua</span>
+                <h3 id="adminTotalCustomers">0</h3>
+                <small class="text-success">Thành viên VIP & Vàng</small>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon products"><i class="fa-solid fa-boxes-stacked"></i></div>
+              <div class="kpi-info">
+                <span>Mẫu Sản Phẩm</span>
+                <h3 id="adminTotalProducts">0</h3>
+                <small>Đang kinh doanh trong kho</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Charts & Recent Orders -->
+          <div class="admin-dashboard-split">
+            <!-- Category Distribution Bar -->
+            <div class="admin-card">
+              <h3><i class="fa-solid fa-chart-simple"></i> Phân Bố Sản Phẩm Theo Danh Mục</h3>
+              <div class="category-breakdown-list" id="adminCategoryBreakdown"></div>
+            </div>
+
+            <!-- Recent Orders Table -->
+            <div class="admin-card">
+              <div class="card-header-flex">
+                <h3><i class="fa-solid fa-clock-rotate-left"></i> Đơn Hàng Mới Nhất</h3>
+                <button class="btn-link" onclick="switchAdminTab('orders', document.querySelectorAll('.admin-nav-item')[2])">Xem tất cả</button>
+              </div>
+              <div class="table-responsive">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Mã Đơn</th>
+                      <th>Khách Hàng</th>
+                      <th>Tổng Tiền</th>
+                      <th>Thanh Toán</th>
+                      <th>Trạng Thái</th>
+                    </tr>
+                  </thead>
+                  <tbody id="adminRecentOrdersTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: PRODUCTS MANAGEMENT -->
+        <div id="adminTab-products" class="admin-tab-pane">
+          <div class="admin-card">
+            <div class="admin-table-filters">
+              <div class="search-wrap-admin">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="adminProductSearchInput" placeholder="Tìm tên sản phẩm, hãng..." oninput="handleAdminProductSearch(this.value)">
+              </div>
+              <div class="select-wrap-admin">
+                <select id="adminProductCatFilter" onchange="handleAdminProductCategoryFilter(this.value)">
+                  <option value="all">Tất cả danh mục</option>
+                  <option value="phone">Điện thoại</option>
+                  <option value="laptop">MacBook & Laptop</option>
+                  <option value="tablet">Tablet & iPad</option>
+                  <option value="watch">Đồng hồ</option>
+                  <option value="audio">Âm thanh</option>
+                  <option value="accessory">Phụ kiện</option>
+                  <option value="old">Máy cũ</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Hình ảnh</th>
+                    <th>Tên Sản Phẩm</th>
+                    <th>Danh mục</th>
+                    <th>Giá Bán</th>
+                    <th>Giá Gốc</th>
+                    <th>Kho</th>
+                    <th>Flash Sale</th>
+                    <th>Hành Động</th>
+                  </tr>
+                </thead>
+                <tbody id="adminProductsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: ORDERS MANAGEMENT -->
+        <div id="adminTab-orders" class="admin-tab-pane">
+          <div class="admin-card">
+            <div class="admin-table-filters">
+              <div class="search-wrap-admin">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="adminOrderSearchInput" placeholder="Tìm theo Mã đơn hoặc SĐT khách..." oninput="handleAdminOrderSearch(this.value)">
+              </div>
+              <div class="select-wrap-admin">
+                <select id="adminOrderStatusFilter" onchange="handleAdminOrderStatusFilter(this.value)">
+                  <option value="all">Tất cả trạng thái</option>
+                  <option value="pending">Chờ xác nhận</option>
+                  <option value="confirmed">Đã xác nhận</option>
+                  <option value="preparing">Đang chuẩn bị</option>
+                  <option value="shipping">Đang giao hàng</option>
+                  <option value="completed">Hoàn thành</option>
+                  <option value="cancelled">Đã hủy</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Mã Đơn</th>
+                    <th>Thời Gian</th>
+                    <th>Khách Hàng & SĐT</th>
+                    <th>Sản Phẩm Đặt</th>
+                    <th>Tổng Tiền</th>
+                    <th>PT Thanh Toán</th>
+                    <th>Trạng Thái Đơn</th>
+                    <th>Cập Nhật</th>
+                  </tr>
+                </thead>
+                <tbody id="adminOrdersTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: CUSTOMERS MANAGEMENT -->
+        <div id="adminTab-customers" class="admin-tab-pane">
+          <div class="admin-card">
+            <div class="table-responsive">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Mã KH</th>
+                    <th>Họ và Tên</th>
+                    <th>Số Điện Thoại</th>
+                    <th>Email</th>
+                    <th>Hạng Thành Viên</th>
+                    <th>Số Đơn Đã Mua</th>
+                    <th>Tổng Chi Tiêu</th>
+                    <th>Ngày Gia Nhập</th>
+                  </tr>
+                </thead>
+                <tbody id="adminCustomersTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 5: TRADE-IN RECORDS -->
+        <div id="adminTab-tradein" class="admin-tab-pane">
+          <div class="admin-card">
+            <div class="table-responsive">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Mã HS</th>
+                    <th>Khách Hàng</th>
+                    <th>Số Điện Thoại</th>
+                    <th>Máy Cũ Cần Bán</th>
+                    <th>Máy Mới Muốn Lên</th>
+                    <th>Giá Thu Dự Kiến</th>
+                    <th>Cửa Hàng Hẹn</th>
+                    <th>Trạng Thái</th>
+                  </tr>
+                </thead>
+                <tbody id="adminTradeInsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 6: VOUCHERS -->
+        <div id="adminTab-vouchers" class="admin-tab-pane">
+          <div class="admin-card">
+            <div class="table-responsive">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Mã Voucher</th>
+                    <th>Mức Giảm</th>
+                    <th>Đơn Tối Thiểu</th>
+                    <th>Mô Tả Áp Dụng</th>
+                    <th>Trạng Thái</th>
+                  </tr>
+                </thead>
+                <tbody id="adminVouchersTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="main-footer">
+    <div class="container footer-grid">
+      <!-- Cột 1: Thông tin thương hiệu -->
+      <div class="footer-col">
+        <div class="footer-logo">
+          <span class="logo-didong">DI ĐỘNG</span>
+          <span class="logo-viet">VIỆT</span>
+        </div>
+        <p class="footer-slogan">Chuyển Giao Giá Trị Vượt Trội</p>
+        <p class="footer-desc">Hệ thống bán lẻ thiết bị công nghệ chính hãng hàng đầu Việt Nam. Đại lý uỷ quyền chính thức Apple (AAR) và đối tác toàn diện của Samsung.</p>
+        <div class="hotline-box">
+          <div>Tổng đài tư vấn: <strong>1800.6018</strong></div>
+          <div>Khiếu nại & Góp ý: <strong>1800.6729</strong></div>
+        </div>
+      </div>
+
+      <!-- Cột 2: Thông tin & Chính sách -->
+      <div class="footer-col">
+        <h4>Chính Sách Vượt Trội</h4>
+        <ul>
+          <li><a href="#" onclick="openModal('policyModal'); return false;">Bảo hành 1 đổi 1 trong 33 ngày</a></li>
+          <li><a href="#" onclick="openModal('policyModal'); return false;">Chính sách Thu cũ đổi mới trợ giá 2 Tr</a></li>
+          <li><a href="#" onclick="openModal('policyModal'); return false;">Chính sách Giao hàng siêu tốc 1H</a></li>
+          <li><a href="#" onclick="openModal('policyModal'); return false;">Chính sách Trả góp 0% duyệt 3 phút</a></li>
+          <li><a href="#" onclick="openModal('policyModal'); return false;">Bảo mật thông tin khách hàng</a></li>
+        </ul>
+      </div>
+
+      <!-- Cột 3: Danh mục chính -->
+      <div class="footer-col">
+        <h4>Danh Mục Sản Phẩm</h4>
+        <ul>
+          <li><a href="#" onclick="filterByCategory('phone'); return false;">Điện thoại iPhone 16 / iPhone 15</a></li>
+          <li><a href="#" onclick="filterByBrand('Samsung'); return false;">Samsung Galaxy S25 / Z Fold6</a></li>
+          <li><a href="#" onclick="filterByCategory('laptop'); return false;">MacBook Air M3 / MacBook Pro</a></li>
+          <li><a href="#" onclick="filterByCategory('tablet'); return false;">iPad Pro M4 / iPad Air M2</a></li>
+          <li><a href="#" onclick="filterByCategory('audio'); return false;">Tai nghe AirPods & Loa Marshall</a></li>
+        </ul>
+      </div>
+
+      <!-- Cột 4: Hệ thống cửa hàng & Chứng nhận -->
+      <div class="footer-col">
+        <h4>Hệ Thống & Thanh Toán</h4>
+        <p><i class="fa-solid fa-shop"></i> Hơn 50 cửa hàng trên toàn quốc</p>
+        <div class="payment-methods-icons">
+          <span><i class="fa-solid fa-money-bill-wave"></i> COD</span>
+          <span><i class="fa-solid fa-qrcode"></i> VietQR</span>
+          <span><i class="fa-brands fa-cc-visa"></i> Visa/Master</span>
+          <span><i class="fa-solid fa-credit-card"></i> Trả góp 0%</span>
+        </div>
+        <div class="certified-box">
+          <span class="cert-item"><i class="fa-brands fa-apple"></i> Apple AAR</span>
+          <span class="cert-item"><i class="fa-solid fa-shield"></i> Chính Hãng 100%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="container footer-bottom-flex">
+        <span>© 2026 Bản quyền thuộc về Di Động Việt - Clone dự án tốt nghiệp cao cấp</span>
+        <span>Phát triển đầy đủ Fullstack RESTful API & Admin Portal</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== FLOATING ACTIONS ==================== -->
+
+  <!-- Chatbot Widget -->
+  <div class="chatbot-floating-wrap" id="chatbotWidget">
+    <button class="chatbot-trigger-btn" onclick="toggleChatbot()" title="Trợ lý tư vấn Di Động Việt">
+      <i class="fa-solid fa-comments"></i>
+      <span class="chat-online-dot"></span>
+      <span class="chat-btn-text">Tư vấn AI</span>
+    </button>
+
+    <div class="chatbot-window" id="chatbotWindow" style="display: none;">
+      <div class="chat-header">
+        <div class="chat-header-info">
+          <div class="chat-avatar"><i class="fa-solid fa-robot"></i></div>
+          <div>
+            <strong>Trợ Lý Di Động Việt</strong>
+            <span><i class="fa-solid fa-circle text-success"></i> Sẵn sàng hỗ trợ 24/7</span>
+          </div>
+        </div>
+        <button class="btn-close-chat" onclick="toggleChatbot()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="chat-messages-container" id="chatMessages">
+        <div class="chat-bubble bot">
+          Dạ Di Động Việt xin chào bạn! 👋 Tôi có thể giúp bạn tìm mẫu điện thoại nào, xem khuyến mãi hay hỗ trợ thu cũ đổi mới ạ?
+        </div>
+      </div>
+
+      <div class="chat-quick-suggestions">
+        <button class="quick-btn" onclick="sendQuickChat('Điện thoại tầm 15 đến 20 triệu')">Tầm 15 - 20 triệu</button>
+        <button class="quick-btn" onclick="sendQuickChat('iPhone 16 Pro Max giá bao nhiêu?')">iPhone 16 Pro Max</button>
+        <button class="quick-btn" onclick="sendQuickChat('Chính sách thu cũ đổi mới thế nào?')">Thu cũ đổi mới</button>
+        <button class="quick-btn" onclick="sendQuickChat('Có hỗ trợ trả góp 0% không?')">Trả góp 0%</button>
+      </div>
+
+      <form id="chatForm" class="chat-input-area" onsubmit="handleChatSubmit(event)">
+        <input type="text" id="chatInput" placeholder="Nhập câu hỏi của bạn..." autocomplete="off">
+        <button type="submit"><i class="fa-solid fa-paper-plane"></i></button>
+      </form>
+    </div>
+  </div>
+
+  <!-- FLOATING COMPARE BAR -->
+  <div class="floating-compare-bar" id="compareBar" style="display: none;">
+    <div class="container compare-bar-flex">
+      <div class="compare-info">
+        <i class="fa-solid fa-code-compare"></i>
+        <span>Đang so sánh (<strong id="compareCount">0</strong>/3 sản phẩm)</span>
+      </div>
+      <div class="compare-thumbnails" id="compareThumbnails"></div>
+      <div class="compare-actions">
+        <button class="btn-compare-now" onclick="openCompareModal()">So Sánh Ngay</button>
+        <button class="btn-compare-clear" onclick="clearCompareList()"><i class="fa-solid fa-trash-can"></i> Xóa</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODALS & DRAWERS ==================== -->
+
+  <!-- 1. PRODUCT DETAILS MODAL -->
+  <div class="modal-backdrop" id="productDetailModal" style="display: none;">
+    <div class="modal-dialog modal-large">
+      <button class="modal-close-btn" onclick="closeModal('productDetailModal')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="product-modal-content" id="productModalDetailsContent">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. CART DRAWER -->
+  <div class="cart-drawer-overlay" id="cartOverlay" onclick="toggleCartDrawer()"></div>
+  <aside class="cart-drawer" id="cartDrawer">
+    <div class="cart-drawer-header">
+      <div class="cart-title">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <h3>Giỏ Hàng Của Bạn (<span id="cartDrawerItemCount">0</span>)</h3>
+      </div>
+      <button class="btn-close-drawer" onclick="toggleCartDrawer()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="cart-drawer-items" id="cartDrawerItems">
+      <!-- Items populated via JS -->
+    </div>
+
+    <div class="cart-drawer-footer">
+      <!-- Voucher input -->
+      <div class="voucher-input-box">
+        <input type="text" id="cartVoucherInput" placeholder="Nhập mã giảm giá (VD: DIDONGVIET500)">
+        <button type="button" onclick="applyVoucher()">Áp Dụng</button>
+      </div>
+      <div id="voucherMessage" class="voucher-msg"></div>
+
+      <!-- Price summary -->
+      <div class="cart-summary-rows">
+        <div class="sum-row">
+          <span>Tạm tính:</span>
+          <span id="cartSubtotalText">0đ</span>
+        </div>
+        <div class="sum-row text-success" id="cartDiscountRow" style="display: none;">
+          <span>Giảm giá Voucher:</span>
+          <span id="cartDiscountText">-0đ</span>
+        </div>
+        <div class="sum-row final">
+          <span>Tổng tiền thanh toán:</span>
+          <strong class="total-price-highlight" id="cartFinalTotalText">0đ</strong>
+        </div>
+      </div>
+
+      <button class="btn-checkout" onclick="openCheckoutModal()">
+        Tiến Hành Đặt Hàng Ngay <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- 3. CHECKOUT & VIETQR MODAL -->
+  <div class="modal-backdrop" id="checkoutModal" style="display: none;">
+    <div class="modal-dialog modal-medium">
+      <button class="modal-close-btn" onclick="closeModal('checkoutModal')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="checkout-modal-body">
+        <h2 class="modal-title"><i class="fa-solid fa-credit-card text-danger"></i> Xác Nhận Đơn Hàng & Thanh Toán</h2>
+        <form id="checkoutForm" onsubmit="handlePlaceOrder(event)">
+          <!-- Customer info -->
+          <div class="form-section">
+            <h4>1. Thông tin người nhận</h4>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Họ và tên khách hàng *</label>
+                <input type="text" id="checkoutName" placeholder="Nguyễn Văn A" required>
+              </div>
+              <div class="form-group">
+                <label>Số điện thoại nhận máy *</label>
+                <input type="tel" id="checkoutPhone" placeholder="0901234567" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- Delivery method -->
+          <div class="form-section">
+            <h4>2. Hình thức nhận hàng</h4>
+            <div class="delivery-options-grid">
+              <label class="delivery-opt active" onclick="selectDeliveryMethod('1h', this)">
+                <input type="radio" name="deliveryMethod" value="1h" checked>
+                <div class="opt-content">
+                  <strong>🚀 Giao hàng hỏa tốc 1H</strong>
+                  <span>Giao tận nơi miễn phí, hỗ trợ kỹ thuật tại chỗ</span>
+                </div>
+              </label>
+              <label class="delivery-opt" onclick="selectDeliveryMethod('store', this)">
+                <input type="radio" name="deliveryMethod" value="store">
+                <div class="opt-content">
+                  <strong>🏪 Nhận tại siêu thị</strong>
+                  <span>Giữ máy tại cửa hàng Di Động Việt gần bạn nhất</span>
+                </div>
+              </label>
+            </div>
+            <div class="form-group" id="deliveryAddressGroup" style="margin-top: 10px;">
+              <label>Địa chỉ giao hàng chi tiết *</label>
+              <input type="text" id="checkoutAddress" placeholder="Số nhà, tên đường, phường/xã, quận/huyện...">
+            </div>
+          </div>
+
+          <!-- Payment method -->
+          <div class="form-section">
+            <h4>3. Chọn phương thức thanh toán</h4>
+            <div class="payment-methods-grid">
+              <label class="pay-method-card active" onclick="selectPaymentMethod('vietqr', this)">
+                <input type="radio" name="paymentMethod" value="vietqr" checked>
+                <div class="pay-method-info">
+                  <strong><i class="fa-solid fa-qrcode text-danger"></i> Chuyển khoản QR Siêu Tốc (VietQR)</strong>
+                  <span>Mở app ngân hàng quét mã QR thanh toán tức thì</span>
+                </div>
+              </label>
+
+              <label class="pay-method-card" onclick="selectPaymentMethod('cod', this)">
+                <input type="radio" name="paymentMethod" value="cod">
+                <div class="pay-method-info">
+                  <strong><i class="fa-solid fa-hand-holding-dollar text-success"></i> Thanh toán khi nhận hàng (COD)</strong>
+                  <span>Kiểm tra máy rồi mới thanh toán tiền mặt</span>
+                </div>
+              </label>
+
+              <label class="pay-method-card" onclick="selectPaymentMethod('installment', this)">
+                <input type="radio" name="paymentMethod" value="installment">
+                <div class="pay-method-info">
+                  <strong><i class="fa-solid fa-credit-card text-primary"></i> Trả góp 0% Lãi Suất</strong>
+                  <span>Qua thẻ tín dụng hoặc công ty tài chính</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- VietQR Preview box if QR selected -->
+          <div id="vietqrPreviewBox" class="vietqr-box">
+            <h4><i class="fa-solid fa-qrcode"></i> Quét mã VietQR thanh toán</h4>
+            <p class="vietqr-sub">Mở ứng dụng ngân hàng hoặc ví điện tử bất kỳ để quét mã chuyển khoản:</p>
+            <div class="vietqr-img-wrap">
+              <img id="vietqrCodeImg" src="" alt="Mã VietQR Chuyển Khoản">
+            </div>
+            <div class="vietqr-bank-info">
+              <div>Ngân hàng: <strong>MBBank (Ngân hàng Quân Đội)</strong></div>
+              <div>Số tài khoản: <strong>0903123456</strong></div>
+              <div>Chủ tài khoản: <strong>DI DONG VIET STORE</strong></div>
+              <div>Số tiền: <strong id="vietqrAmountText" class="text-danger">0đ</strong></div>
+            </div>
+          </div>
+
+          <!-- Total checkout action -->
+          <div class="checkout-footer-action">
+            <div class="checkout-total-calc">
+              <span>Số tiền cần thanh toán:</span>
+              <strong id="checkoutFinalAmountText" class="total-big">0đ</strong>
+            </div>
+            <button type="submit" class="btn-submit-order" id="btnSubmitOrder">Hoàn Tất Đặt Hàng</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. ORDER LOOKUP MODAL (TRA CỨU ĐƠN HÀNG) -->
+  <div class="modal-backdrop" id="orderLookupModal" style="display: none;">
+    <div class="modal-dialog modal-medium">
+      <button class="modal-close-btn" onclick="closeModal('orderLookupModal')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="lookup-modal-body">
+        <h2 class="modal-title"><i class="fa-solid fa-truck-fast text-danger"></i> Tra Cứu Trạng Thái Đơn Hàng</h2>
+        <p class="lookup-sub">Nhập Mã đơn hàng (VD: DDV-9821) hoặc Số điện thoại đặt hàng để kiểm tra tiến trình:</p>
+
+        <form class="lookup-search-form" onsubmit="handleOrderLookup(event)">
+          <input type="text" id="orderLookupInput" placeholder="Nhập mã đơn DDV-xxxx hoặc Số điện thoại..." required>
+          <button type="submit"><i class="fa-solid fa-magnifying-glass"></i> Tra Cứu</button>
+        </form>
+
+        <div id="orderLookupResults" class="lookup-results-wrap">
+          <!-- Populated via JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. COMPARE MODAL (SO SÁNH SẢN PHẨM) -->
+  <div class="modal-backdrop" id="compareModal" style="display: none;">
+    <div class="modal-dialog modal-large">
+      <button class="modal-close-btn" onclick="closeModal('compareModal')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="compare-modal-body">
+        <h2 class="modal-title"><i class="fa-solid fa-code-compare text-danger"></i> So Sánh Chi Tiết Sản Phẩm</h2>
+        <div class="table-responsive">
+          <table class="compare-table" id="compareSpecsTable">
+            <!-- Populated via JS -->
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. STORES LOCATOR MODAL -->
+  <div class="modal-backdrop" id="storesModal" style="display: none;">
+    <div class="modal-dialog modal-medium">
+      <button class="modal-close-btn" onclick="closeModal('storesModal')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="stores-modal-body">
+        <h2 class="modal-title"><i class="fa-solid fa-shop text-danger"></i> Hệ Thống Cửa Hàng Di Động Việt</h2>
+        <div class="store-city-filter">
+          <button class="city-btn active" onclick="filterStoresCity('all', this)">Tất cả</button>
+          <button class="city-btn" onclick="filterStoresCity('TP. Hồ Chí Minh', this)">TP.HCM</button>
+          <button class="city-btn" onclick="filterStoresCity('Hà Nội', this)">Hà Nội</button>
+          <button class="city-btn" onclick="filterStoresCity('Đà Nẵng', this)">Đà Nẵng</button>
+          <button class="city-btn" onclick="filterStoresCity('Bình Dương', this)">Bình Dương</button>
+        </div>
+        <div class="stores-list-container" id="storesFullList">
+          <!-- Populated via JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. USER AUTH MODAL -->
+  <div class="modal-backdrop" id="authModal" style="display: none;">
+    <div class="modal-dialog modal-small">
+      <button class="modal-close-btn" onclick="closeModal('authModal')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="auth-modal-body">
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tabLoginBtn" onclick="switchAuthTab('login')">Đăng Nhập</button>
+          <button class="auth-tab" id="tabRegisterBtn" onclick="switchAuthTab('register')">Đăng Ký</button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="loginForm" onsubmit="handleCustomerLogin(event)">
+          <div class="form-group">
+            <label>Số điện thoại hoặc Email:</label>
+            <input type="text" id="loginUsername" placeholder="Nhập SĐT của bạn" value="0903123456" required>
+          </div>
+          <div class="form-group">
+            <label>Mật khẩu:</label>
+            <input type="password" id="loginPassword" placeholder="Nhập mật khẩu" value="123456" required>
+          </div>
+          <button type="submit" class="btn-auth-submit">Đăng Nhập Ngay</button>
+          <div class="quick-demo-login">
+            <button type="button" class="btn-demo-acc" onclick="demoLoginVIP()">Đăng nhập nhanh (VIP Khách Hàng)</button>
+          </div>
+        </form>
+
+        <!-- Register Form -->
+        <form id="registerForm" onsubmit="handleCustomerRegister(event)" style="display: none;">
+          <div class="form-group">
+            <label>Họ và tên của bạn:</label>
+            <input type="text" id="regName" placeholder="Nguyễn Văn A" required>
+          </div>
+          <div class="form-group">
+            <label>Số điện thoại:</label>
+            <input type="tel" id="regPhone" placeholder="09xxxxxxxx" required>
+          </div>
+          <div class="form-group">
+            <label>Mật khẩu:</label>
+            <input type="password" id="regPassword" placeholder="Tạo mật khẩu" required>
+          </div>
+          <button type="submit" class="btn-auth-submit">Tạo Tài Khoản</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. ADMIN: ADD/EDIT PRODUCT MODAL -->
+  <div class="modal-backdrop" id="adminProductModal" style="display: none;">
+    <div class="modal-dialog modal-medium">
+      <button class="modal-close-btn" onclick="closeModal('adminProductModal')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="admin-modal-body">
+        <h2 class="modal-title" id="adminProductModalTitle">Thêm Sản Phẩm Mới</h2>
+        <form id="adminProductForm" onsubmit="handleSaveAdminProduct(event)">
+          <input type="hidden" id="adminProdId">
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Tên sản phẩm *</label>
+              <input type="text" id="adminProdName" placeholder="VD: iPhone 16 Pro Max 256GB" required>
+            </div>
+            <div class="form-group">
+              <label>Thương hiệu *</label>
+              <select id="adminProdBrand" required>
+                <option value="Apple">Apple</option>
+                <option value="Samsung">Samsung</option>
+                <option value="Xiaomi">Xiaomi</option>
+                <option value="Marshall">Marshall</option>
+                <option value="Anker">Anker</option>
+                <option value="Baseus">Baseus</option>
+                <option value="Torras">Torras</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Danh mục *</label>
+              <select id="adminProdCategory" required>
+                <option value="phone">Điện thoại</option>
+                <option value="laptop">MacBook & Laptop</option>
+                <option value="tablet">Tablet & iPad</option>
+                <option value="watch">Đồng hồ</option>
+                <option value="audio">Âm thanh</option>
+                <option value="accessory">Phụ kiện</option>
+                <option value="old">Máy cũ</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Số lượng trong kho</label>
+              <input type="number" id="adminProdStock" value="20" required>
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Giá bán khuyến mãi (VNĐ) *</label>
+              <input type="number" id="adminProdSalePrice" placeholder="VD: 34490000" required>
+            </div>
+            <div class="form-group">
+              <label>Giá niêm yết gốc (VNĐ) *</label>
+              <input type="number" id="adminProdPrice" placeholder="VD: 36990000" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>URL Hình ảnh sản phẩm</label>
+            <input type="url" id="adminProdImage" placeholder="https://images.unsplash.com/..." required oninput="previewAdminProdImage(this.value)">
+            <div id="adminProdImagePreview" style="margin-top: 8px; text-align: center;"></div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Tùy chọn dung lượng (phân cách bởi dấu phẩy)</label>
+              <input type="text" id="adminProdStorage" placeholder="128GB, 256GB, 512GB">
+            </div>
+            <div class="form-group">
+              <label>Màu sắc (phân cách bởi dấu phẩy)</label>
+              <input type="text" id="adminProdColors" placeholder="Titan Sa Mạc, Titan Trắng, Đen">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Mô tả chi tiết</label>
+            <textarea id="adminProdDesc" rows="3" placeholder="Thông tin nổi bật của sản phẩm..."></textarea>
+          </div>
+
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" id="adminProdFlashSale"> Đặt làm sản phẩm Flash Sale trang chủ
+            </label>
+          </div>
+
+          <button type="submit" class="btn-primary-admin" style="width: 100%; padding: 12px; font-size: 15px;">
+            Lưu Sản Phẩm Vào Hệ Thống
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- SCRIPT -->
+  <script src="script.js"></script>
+</body>
+</html>
