@@ -1,4 +1,4 @@
-# 📱 Di Động Việt (didongviet.vn) - Hệ Thống Bán Lẻ Công Nghệ & Quản Trị Toàn Diện
+# 📱 didong - Hệ Thống Bán Lẻ Công Nghệ & Quản Trị Toàn Diện
 
 > **Chuyển Giao Giá Trị Vượt Trội**  
 > Dự án Fullstack mô phỏng hệ thống thương mại điện tử Di Động Việt (`https://didongviet.vn/`) với đầy đủ phân hệ dành cho **Khách Hàng (Customer)** và **Quản Trị Viên (Admin Hub)**.

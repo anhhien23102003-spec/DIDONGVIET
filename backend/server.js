@@ -1,5 +1,6 @@
 require('dotenv').config();
 const path = require('path');
+const crypto = require('crypto');
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -9,6 +10,7 @@ const { loadData, saveData } = require('./data/store');
 
 const app = express();
 const frontendPath = path.join(__dirname, '../frontend/public');
+const adminSessions = new Set();
 
 // Kết nối MongoDB nếu có cấu hình biến môi trường
 if (process.env.MONGO_URI) {
@@ -23,6 +25,234 @@ app.use(cors({ origin: true, credentials: true }));
 
 // Serve frontend static files
 app.use(express.static(frontendPath));
+
+// =================== AUTH APIS ===================
+
+function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return `${salt}:${hash}`;
+}
+
+function verifyPassword(password, storedPassword) {
+  const [salt, storedHash] = String(storedPassword || '').split(':');
+  if (!salt || !storedHash) return false;
+
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(storedHash, 'hex'));
+}
+
+function normalizeAccountKey(value) {
+  return String(value || '').trim().toLowerCase().replace(/\s+/g, '');
+}
+
+function getCustomerProfile(account, data) {
+  const customers = Array.isArray(data.customers) ? data.customers : [];
+  const normalizedPhone = normalizeAccountKey(account.phone);
+  const normalizedEmail = normalizeAccountKey(account.email);
+  const customer = customers.find(item =>
+    normalizeAccountKey(item.phone) === normalizedPhone ||
+    (normalizedEmail && normalizeAccountKey(item.email) === normalizedEmail)
+  );
+
+  return {
+    id: account.id,
+    customerId: customer ? customer.id : undefined,
+    name: (customer && customer.name) || account.name,
+    phone: account.phone,
+    email: account.email || (customer ? customer.email : ''),
+    tier: (customer && customer.tier) || account.tier || 'Hội Viên Mới',
+    ordersCount: customer ? (customer.ordersCount || 0) : 0,
+    totalSpent: customer ? (customer.totalSpent || 0) : 0,
+    joinedAt: customer ? customer.joinedAt : (account.createdAt ? account.createdAt.slice(0, 10) : ''),
+    role: 'customer'
+  };
+}
+
+app.post('/api/auth/register', (req, res) => {
+  try {
+    const data = loadData();
+    const { name, phone, email, password } = req.body;
+
+    if (!name || !phone || !password) {
+      return res.status(400).json({ success: false, message: 'Vui lòng nhập đầy đủ họ tên, số điện thoại và mật khẩu!' });
+    }
+    if (String(password).length < 6) {
+      return res.status(400).json({ success: false, message: 'Mật khẩu phải có ít nhất 6 ký tự!' });
+    }
+    if (!/^0\d{9,10}$/.test(String(phone).replace(/\s+/g, ''))) {
+      return res.status(400).json({ success: false, message: 'Số điện thoại không hợp lệ!' });
+    }
+
+    data.authAccounts = Array.isArray(data.authAccounts) ? data.authAccounts : [];
+    const normalizedPhone = normalizeAccountKey(phone);
+    const normalizedEmail = normalizeAccountKey(email);
+    const exists = data.authAccounts.some(account =>
+      normalizeAccountKey(account.phone) === normalizedPhone ||
+      (normalizedEmail && normalizeAccountKey(account.email) === normalizedEmail)
+    );
+    if (exists) {
+      return res.status(409).json({ success: false, message: 'Số điện thoại hoặc email này đã được đăng ký!' });
+    }
+
+    const account = {
+      id: 'account-' + Date.now().toString().slice(-8),
+      name: String(name).trim(),
+      phone: String(phone).replace(/\s+/g, ''),
+      email: normalizedEmail ? String(email).trim().toLowerCase() : `${normalizedPhone}@gmail.com`,
+      passwordHash: hashPassword(String(password)),
+      tier: 'Hội Viên Mới',
+      createdAt: new Date().toISOString()
+    };
+
+    data.authAccounts.push(account);
+    const customer = data.customers.find(item => normalizeAccountKey(item.phone) === normalizedPhone);
+    if (!customer) {
+      data.customers.unshift({
+        id: 'cust-' + Date.now().toString().slice(-5),
+        name: account.name,
+        phone: account.phone,
+        email: account.email,
+        tier: account.tier,
+        ordersCount: 0,
+        totalSpent: 0,
+        joinedAt: new Date().toISOString().slice(0, 10)
+      });
+    }
+    saveData(data);
+    res.status(201).json({ success: true, message: 'Đăng ký thành công!', data: getCustomerProfile(account, data) });
+  } catch (error) {
+    console.error('POST /api/auth/register error:', error);
+    res.status(500).json({ success: false, message: 'Không thể tạo tài khoản lúc này.' });
+  }
+});
+
+app.post('/api/auth/login', (req, res) => {
+  try {
+    const data = loadData();
+    const { login, password } = req.body;
+    const normalizedLogin = normalizeAccountKey(login);
+
+    const adminEmail = (process.env.ADMIN_EMAIL || 'admin@didongviet.vn').toLowerCase();
+    if (normalizedLogin === adminEmail) {
+      return res.status(400).json({
+        success: false,
+        message: 'Đây là tài khoản Quản Trị Viên (Admin). Vui lòng nhấn vào "Quản Trị Admin" để đăng nhập!'
+      });
+    }
+
+    const accounts = Array.isArray(data.authAccounts) ? data.authAccounts : [];
+    const account = accounts.find(item =>
+      normalizeAccountKey(item.phone) === normalizedLogin ||
+      normalizeAccountKey(item.email) === normalizedLogin
+    );
+
+    if (!account || !verifyPassword(String(password || ''), account.passwordHash)) {
+      return res.status(401).json({ success: false, message: 'Số điện thoại/email hoặc mật khẩu không đúng!' });
+    }
+
+    const profile = getCustomerProfile(account, data);
+    res.json({ success: true, message: 'Đăng nhập thành công!', data: profile });
+  } catch (error) {
+    console.error('POST /api/auth/login error:', error);
+    res.status(500).json({ success: false, message: 'Không thể đăng nhập lúc này.' });
+  }
+});
+
+app.post('/api/auth/admin-login', (req, res) => {
+  const { email, password } = req.body;
+  const adminEmail = (process.env.ADMIN_EMAIL || 'admin@didongviet.vn').toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+  const cleanEmail = String(email || '').trim().toLowerCase();
+
+  if (cleanEmail !== adminEmail || password !== adminPassword) {
+    const data = loadData();
+    const accounts = Array.isArray(data.authAccounts) ? data.authAccounts : [];
+    const isCustomer = accounts.some(a =>
+      normalizeAccountKey(a.phone) === normalizeAccountKey(cleanEmail) ||
+      normalizeAccountKey(a.email) === normalizeAccountKey(cleanEmail)
+    );
+    if (isCustomer) {
+      return res.status(403).json({
+        success: false,
+        message: 'Tài khoản này là tài khoản Khách Hàng, không có quyền Quản Trị! Vui lòng đăng nhập tại mục Tài Khoản.'
+      });
+    }
+    return res.status(401).json({ success: false, message: 'Email hoặc mật khẩu quản trị không đúng!' });
+  }
+
+  const sessionToken = crypto.randomBytes(32).toString('hex');
+  adminSessions.add(sessionToken);
+
+  res.json({
+    success: true,
+    message: 'Đăng nhập Admin thành công!',
+    data: { name: 'Super Admin DDV', email: adminEmail, role: 'admin', sessionToken }
+  });
+});
+
+app.get('/api/auth/admin-session', (req, res) => {
+  if (!isValidAdminRequest(req)) {
+    return res.status(401).json({ success: false, message: 'Phiên Admin không hợp lệ hoặc đã hết hạn.' });
+  }
+
+  res.json({ success: true, data: { role: 'admin', email: req.headers['x-admin-email'] } });
+});
+
+app.get('/api/auth/profile', (req, res) => {
+  try {
+    const { phone, email, id } = req.query;
+    if (!phone && !email && !id) {
+      return res.status(400).json({ success: false, message: 'Thiếu thông tin tra cứu tài khoản!' });
+    }
+    const data = loadData();
+    const accounts = Array.isArray(data.authAccounts) ? data.authAccounts : [];
+    const account = accounts.find(a =>
+      (id && a.id === id) ||
+      (phone && normalizeAccountKey(a.phone) === normalizeAccountKey(phone)) ||
+      (email && normalizeAccountKey(a.email) === normalizeAccountKey(email))
+    );
+
+    if (!account) {
+      const customer = (data.customers || []).find(c =>
+        (phone && normalizeAccountKey(c.phone) === normalizeAccountKey(phone)) ||
+        (email && normalizeAccountKey(c.email) === normalizeAccountKey(email))
+      );
+      if (customer) {
+        return res.json({
+          success: true,
+          data: {
+            id: customer.id,
+            name: customer.name,
+            phone: customer.phone,
+            email: customer.email,
+            tier: customer.tier || 'Hội Viên Mới',
+            ordersCount: customer.ordersCount || 0,
+            totalSpent: customer.totalSpent || 0,
+            joinedAt: customer.joinedAt,
+            role: 'customer'
+          }
+        });
+      }
+      return res.status(404).json({ success: false, message: 'Không tìm thấy thông tin tài khoản!' });
+    }
+
+    const profile = getCustomerProfile(account, data);
+    res.json({ success: true, data: profile });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Lỗi tải thông tin tài khoản.' });
+  }
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  res.json({ success: true, message: 'Đăng xuất tài khoản khách hàng thành công!' });
+});
+
+app.post('/api/auth/admin-logout', (req, res) => {
+  const sessionToken = String(req.headers['x-admin-token'] || '');
+  if (sessionToken) adminSessions.delete(sessionToken);
+  res.json({ success: true, message: 'Đăng xuất quản trị Admin thành công!' });
+});
+
 
 // =================== PRODUCT APIS ===================
 
@@ -101,8 +331,29 @@ app.get('/api/products/:id', (req, res) => {
   }
 });
 
-// POST /api/products - Thêm sản phẩm mới (Admin)
-app.post('/api/products', (req, res) => {
+// Middleware kiểm tra quyền Quản trị viên (Admin)
+function isValidAdminRequest(req) {
+  const role = req.headers['x-user-role'];
+  const email = req.headers['x-admin-email'];
+  const sessionToken = String(req.headers['x-admin-token'] || '');
+  const adminEmail = (process.env.ADMIN_EMAIL || 'admin@didongviet.vn').toLowerCase();
+
+  return role === 'admin' && String(email || '').trim().toLowerCase() === adminEmail && adminSessions.has(sessionToken);
+}
+
+function requireAdmin(req, res, next) {
+  if (isValidAdminRequest(req)) {
+    return next();
+  }
+
+  return res.status(403).json({
+    success: false,
+    message: 'Bạn không có quyền thực hiện thao tác này! Chỉ Quản Trị Viên (Admin) mới có quyền thêm, sửa hoặc xóa sản phẩm.'
+  });
+}
+
+// POST /api/products - Thêm sản phẩm mới (Chỉ Admin)
+app.post('/api/products', requireAdmin, (req, res) => {
   try {
     const data = loadData();
     const { name, category, brand, price, salePrice, stock, image, badge, installment, storageOptions, colors, specs, description, isFlashSale } = req.body;
@@ -142,8 +393,8 @@ app.post('/api/products', (req, res) => {
   }
 });
 
-// PUT /api/products/:id - Cập nhật sản phẩm (Admin)
-app.put('/api/products/:id', (req, res) => {
+// PUT /api/products/:id - Cập nhật sản phẩm (Chỉ Admin)
+app.put('/api/products/:id', requireAdmin, (req, res) => {
   try {
     const data = loadData();
     const index = data.products.findIndex(p => p.id === req.params.id);
@@ -168,8 +419,8 @@ app.put('/api/products/:id', (req, res) => {
   }
 });
 
-// DELETE /api/products/:id - Xóa sản phẩm (Admin)
-app.delete('/api/products/:id', (req, res) => {
+// DELETE /api/products/:id - Xóa sản phẩm (Chỉ Admin)
+app.delete('/api/products/:id', requireAdmin, (req, res) => {
   try {
     const data = loadData();
     const prevLen = data.products.length;
@@ -193,6 +444,10 @@ app.get('/api/orders', (req, res) => {
   try {
     const data = loadData();
     const { phone, id } = req.query;
+
+    if (!phone && !id && !isValidAdminRequest(req)) {
+      return res.status(403).json({ success: false, message: 'Chỉ Quản Trị Viên mới được xem toàn bộ đơn hàng.' });
+    }
 
     if (id) {
       const order = data.orders.find(o => o.id.toLowerCase() === id.trim().toLowerCase());
@@ -262,6 +517,14 @@ app.post('/api/orders', (req, res) => {
         totalSpent: Number(totalAmount),
         joinedAt: dateStr.split(' ')[0]
       });
+      customer = data.customers[0];
+    }
+
+    // Đồng bộ cập nhật tier vào authAccounts nếu có tài khoản
+    const normalizedOrderPhone = normalizeAccountKey(phone);
+    const authAcc = (data.authAccounts || []).find(a => normalizeAccountKey(a.phone) === normalizedOrderPhone);
+    if (authAcc && customer) {
+      authAcc.tier = customer.tier;
     }
 
     saveData(data);
@@ -278,7 +541,7 @@ app.post('/api/orders', (req, res) => {
 });
 
 // PATCH /api/orders/:id/status - Cập nhật trạng thái đơn hàng (Admin)
-app.patch('/api/orders/:id/status', (req, res) => {
+app.patch('/api/orders/:id/status', requireAdmin, (req, res) => {
   try {
     const data = loadData();
     const order = data.orders.find(o => o.id.toLowerCase() === req.params.id.toLowerCase());
@@ -300,7 +563,7 @@ app.patch('/api/orders/:id/status', (req, res) => {
 // =================== VOUCHER APIS ===================
 
 // GET /api/vouchers
-app.get('/api/vouchers', (req, res) => {
+app.get('/api/vouchers', requireAdmin, (req, res) => {
   try {
     const data = loadData();
     res.json({ success: true, data: data.vouchers });
@@ -341,7 +604,7 @@ app.post('/api/vouchers/apply', (req, res) => {
 
 // =================== TRADE-IN (THU CŨ ĐỔI MỚI) APIS ===================
 
-app.get('/api/trade-in', (req, res) => {
+app.get('/api/trade-in', requireAdmin, (req, res) => {
   try {
     const data = loadData();
     res.json({ success: true, data: data.tradeIns });
@@ -403,7 +666,7 @@ app.get('/api/stores', (req, res) => {
   }
 });
 
-app.get('/api/customers', (req, res) => {
+app.get('/api/customers', requireAdmin, (req, res) => {
   try {
     const data = loadData();
     res.json({ success: true, count: data.customers.length, data: data.customers });
@@ -414,7 +677,7 @@ app.get('/api/customers', (req, res) => {
 
 // =================== ADMIN STATS API ===================
 
-app.get('/api/admin/stats', (req, res) => {
+app.get('/api/admin/stats', requireAdmin, (req, res) => {
   try {
     const data = loadData();
     const totalOrders = data.orders.length;

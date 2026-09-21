@@ -949,18 +949,64 @@ const INITIAL_DATA = {
   ]
 };
 
+function hashPassword(password, salt = 'salt123456') {
+  const crypto = require('crypto');
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return `${salt}:${hash}`;
+}
+
+function ensureAuthAccounts(data) {
+  if (!Array.isArray(data.authAccounts) || data.authAccounts.length === 0) {
+    data.authAccounts = [
+      {
+        id: 'account-001',
+        name: 'Nguyễn Văn An',
+        phone: '0903123456',
+        email: 'an.nguyen@gmail.com',
+        passwordHash: hashPassword('123456', 'salt0903123456'),
+        tier: 'VIP Kim Cương',
+        createdAt: '2024-01-15T00:00:00.000Z'
+      },
+      {
+        id: 'account-002',
+        name: 'Trần Thị Mai',
+        phone: '0918765432',
+        email: 'mai.tran@gmail.com',
+        passwordHash: hashPassword('123456', 'salt0918765432'),
+        tier: 'Hội Viên Vàng',
+        createdAt: '2024-06-10T00:00:00.000Z'
+      },
+      {
+        id: 'account-003',
+        name: 'Lê Hoàng Nam',
+        phone: '0934567890',
+        email: 'nam.le@gmail.com',
+        passwordHash: hashPassword('123456', 'salt0934567890'),
+        tier: 'Hội Viên Bạc',
+        createdAt: '2026-09-01T00:00:00.000Z'
+      }
+    ];
+    try {
+      fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    } catch (e) {}
+  }
+  return data;
+}
+
 // Initialize file if not exists
 function loadData() {
   try {
     if (!fs.existsSync(DATA_FILE)) {
+      ensureAuthAccounts(INITIAL_DATA);
       fs.writeFileSync(DATA_FILE, JSON.stringify(INITIAL_DATA, null, 2), 'utf-8');
       return INITIAL_DATA;
     }
     const content = fs.readFileSync(DATA_FILE, 'utf-8');
-    return JSON.parse(content);
+    const parsed = JSON.parse(content);
+    return ensureAuthAccounts(parsed);
   } catch (err) {
     console.error('Error reading store.json, resetting to initial data:', err);
-    return INITIAL_DATA;
+    return ensureAuthAccounts(INITIAL_DATA);
   }
 }
 
@@ -979,3 +1025,4 @@ module.exports = {
   saveData,
   INITIAL_DATA
 };
+

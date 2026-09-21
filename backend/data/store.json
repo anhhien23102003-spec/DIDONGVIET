@@ -909,6 +909,74 @@
   ],
   "orders": [
     {
+      "id": "DDV-7875",
+      "createdAt": "2026-09-21 20:04",
+      "customerName": "Nguyễn Văn An",
+      "phone": "0903123456",
+      "address": "Nhận tại cửa hàng Di Động Việt",
+      "deliveryMethod": "1h",
+      "paymentMethod": "vietqr",
+      "items": [
+        {
+          "id": "prod-017",
+          "name": "Pin sạc dự phòng MagSafe Baseus 10.000mAh 20W",
+          "storage": "10000mAh",
+          "color": "Trắng",
+          "price": 690000,
+          "image": "https://images.unsplash.com/photo-1609592424300-8cb969f69f83?w=600&auto=format&fit=crop&q=80",
+          "quantity": 1
+        },
+        {
+          "id": "prod-005",
+          "name": "iPhone 15 128GB Chính Hãng VN/A",
+          "storage": "128GB",
+          "color": "Hồng Pastel",
+          "price": 18790000,
+          "image": "https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=600&auto=format&fit=crop&q=80",
+          "quantity": 1
+        },
+        {
+          "id": "prod-003",
+          "name": "Samsung Galaxy S25 Ultra 5G 256GB",
+          "storage": "256GB",
+          "color": "Titan Xanh",
+          "price": 32990000,
+          "image": "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=600&auto=format&fit=crop&q=80",
+          "quantity": 1
+        }
+      ],
+      "voucherCode": "",
+      "discountAmount": 0,
+      "totalAmount": 52470000,
+      "status": "pending",
+      "paymentStatus": "paid"
+    },
+    {
+      "id": "DDV-2808",
+      "createdAt": "2026-09-19 09:04",
+      "customerName": "Nguyễn Văn An",
+      "phone": "0903123456",
+      "address": "Nhận tại cửa hàng Di Động Việt",
+      "deliveryMethod": "1h",
+      "paymentMethod": "vietqr",
+      "items": [
+        {
+          "id": "prod-003",
+          "name": "Samsung Galaxy S25 Ultra 5G 256GB",
+          "storage": "256GB",
+          "color": "Titan Xanh",
+          "price": 32990000,
+          "image": "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=600&auto=format&fit=crop&q=80",
+          "quantity": 1
+        }
+      ],
+      "voucherCode": "",
+      "discountAmount": 0,
+      "totalAmount": 32990000,
+      "status": "pending",
+      "paymentStatus": "paid"
+    },
+    {
       "id": "DDV-7910",
       "createdAt": "2026-09-08 17:05",
       "customerName": "Đặng Công Hiển",
@@ -930,7 +998,7 @@
       "voucherCode": "",
       "discountAmount": 0,
       "totalAmount": 27890000,
-      "status": "pending",
+      "status": "preparing",
       "paymentStatus": "paid"
     },
     {
@@ -954,7 +1022,7 @@
       "voucherCode": "DIDONGVIET500",
       "discountAmount": 500000,
       "totalAmount": 33990000,
-      "status": "pending",
+      "status": "preparing",
       "paymentStatus": "paid"
     },
     {
@@ -979,7 +1047,7 @@
       "voucherCode": "DIDONGVIET500",
       "discountAmount": 500000,
       "totalAmount": 33990000,
-      "status": "pending",
+      "status": "preparing",
       "paymentStatus": "paid"
     },
     {
@@ -1069,8 +1137,8 @@
       "phone": "0903123456",
       "email": "an.nguyen@gmail.com",
       "tier": "VIP Kim Cương",
-      "ordersCount": 4,
-      "totalSpent": 89450000,
+      "ordersCount": 6,
+      "totalSpent": 174910000,
       "joinedAt": "2024-01-15"
     },
     {
@@ -1200,6 +1268,35 @@
       "features": [
         "Bảo hành 1 đổi 1 vượt trội"
       ]
+    }
+  ],
+  "authAccounts": [
+    {
+      "id": "account-001",
+      "name": "Nguyễn Văn An",
+      "phone": "0903123456",
+      "email": "an.nguyen@gmail.com",
+      "passwordHash": "salt0903123456:ca15547cbe0a36e43074b334acec29ced2374ab02f5c25871bdf91be4e0aa6f52788dbcfdc56fc699a75233f2780c1048d2fb8f604ae454e14c9eb2b440f3d22",
+      "tier": "VIP Kim Cương",
+      "createdAt": "2024-01-15T00:00:00.000Z"
+    },
+    {
+      "id": "account-002",
+      "name": "Trần Thị Mai",
+      "phone": "0918765432",
+      "email": "mai.tran@gmail.com",
+      "passwordHash": "salt0918765432:c889ff9cf913d0cdd42692be3e256991dd97709012629fd1d0bdf503261f08e14fefebf4f0a725cf332a064ea00c4947083267026f2cf0505368baf3507acf7c",
+      "tier": "Hội Viên Vàng",
+      "createdAt": "2024-06-10T00:00:00.000Z"
+    },
+    {
+      "id": "account-003",
+      "name": "Lê Hoàng Nam",
+      "phone": "0934567890",
+      "email": "nam.le@gmail.com",
+      "passwordHash": "salt0934567890:657f5f84d0196de982137b9bd9e0454c08147a062a30650c4e53688f33d4b6bc74a6aaaaf5e273ea0b78aef399018383c3c0e06cbd1ab4e5bc3d0203ee5d4189",
+      "tier": "Hội Viên Bạc",
+      "createdAt": "2026-09-01T00:00:00.000Z"
     }
   ]
 }

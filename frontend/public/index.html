@@ -12,6 +12,27 @@
 </head>
 <body>
 
+  <!-- THANH ĐIỀU KHIỂN DÀNH CHO ADMIN KHI ĐANG XEM SHOP -->
+  <div class="admin-shop-bar" id="adminShopControlBar" style="display: none;">
+    <div class="container admin-shop-bar-inner">
+      <div class="admin-shop-status">
+        <span class="admin-live-badge"><i class="fa-solid fa-circle"></i> CHẾ ĐỘ QUẢN TRỊ VIÊN</span>
+        <span class="admin-user-tag"><i class="fa-solid fa-user-shield"></i> <span id="adminShopBarUser">Super Admin DDV (admin@didongviet.vn)</span></span>
+      </div>
+      <div class="admin-shop-actions">
+        <button class="btn-admin-bar btn-admin-bar-primary" onclick="openAddProductModal()">
+          <i class="fa-solid fa-plus"></i> Thêm Sản Phẩm Mới
+        </button>
+        <button class="btn-admin-bar" onclick="switchToAdminPortal()">
+          <i class="fa-solid fa-gauge-high"></i> Vào Admin Hub
+        </button>
+        <button class="btn-admin-bar btn-admin-bar-danger" onclick="logoutAdmin()">
+          <i class="fa-solid fa-right-from-bracket"></i> Đăng Xuất Admin
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- TOP PROMO BANNER -->
   <div class="top-promo-banner">
     <div class="container top-promo-content">
@@ -88,18 +109,23 @@
           </div>
         </button>
 
-        <!-- Tài khoản -->
-        <button class="header-action-btn btn-auth" onclick="openModal('authModal')">
-          <i class="fa-solid fa-circle-user"></i>
-          <div class="action-text" id="userHeaderAction">
-            <span class="sub">Xin chào</span>
-            <strong>Tài khoản</strong>
-          </div>
-        </button>
+        <!-- Tài khoản & Đăng xuất -->
+        <div class="user-auth-header-group">
+          <button class="header-action-btn btn-auth" id="headerUserBtn" onclick="handleUserHeaderClick()">
+            <i class="fa-solid fa-circle-user"></i>
+            <div class="action-text" id="userHeaderAction">
+              <span class="sub">Xin chào</span>
+              <strong>Tài khoản</strong>
+            </div>
+          </button>
+          <button class="btn-quick-logout" id="btnQuickLogout" onclick="logoutCustomer(event)" title="Đăng xuất tài khoản khách hàng" style="display: none;">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </button>
+        </div>
 
-        <!-- NÚT CHUYỂN SANG ADMIN -->
-        <button class="btn-admin-switch" onclick="toggleAdminView()">
-          <i class="fa-solid fa-gauge-high"></i>
+        <!-- NÚT CỔNG QUẢN TRỊ ADMIN (TÁCH BIỆT) -->
+        <button class="btn-admin-switch" id="headerAdminBtn" onclick="handleAdminBtnClick()" title="Cổng Quản Trị Hệ Thống Di Động Việt">
+          <i class="fa-solid fa-shield-halved"></i>
           <span id="adminSwitchLabel">Quản Trị Admin</span>
         </button>
       </div>
@@ -580,10 +606,14 @@
 
         <div class="admin-user-info">
           <div class="admin-avatar"><i class="fa-solid fa-user-shield"></i></div>
-          <div>
-            <strong>Super Admin DDV</strong>
-            <span>admin@didongviet.vn</span>
+          <div class="admin-user-details">
+            <strong id="adminSidebarName">Super Admin DDV</strong>
+            <span id="adminSidebarEmail">admin@didongviet.vn</span>
           </div>
+          <button class="btn-exit-admin btn-admin-logout" onclick="logoutAdmin()" title="Đăng xuất Quản trị Admin">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Đăng xuất Admin</span>
+          </button>
         </div>
       </aside>
 
@@ -595,6 +625,9 @@
           <div class="admin-topbar-actions">
             <button class="btn-admin-action" onclick="refreshAdminData()"><i class="fa-solid fa-arrows-rotate"></i> Làm mới</button>
             <button class="btn-admin-action btn-primary-admin" onclick="openAddProductModal()"><i class="fa-solid fa-plus"></i> Thêm Sản Phẩm Mới</button>
+            <button class="btn-admin-action btn-admin-top-logout" onclick="logoutAdmin()" title="Đăng xuất Quản trị Admin">
+              <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất Admin
+            </button>
           </div>
         </div>
 
@@ -1164,48 +1197,190 @@
     </div>
   </div>
 
-  <!-- 7. USER AUTH MODAL -->
+  <!-- 7. CỔNG ĐĂNG NHẬP KHÁCH HÀNG (DÀNH RIÊNG CHO KHÁCH HÀNG) -->
   <div class="modal-backdrop" id="authModal" style="display: none;">
-    <div class="modal-dialog modal-small">
+    <div class="modal-dialog modal-small modal-customer-auth">
       <button class="modal-close-btn" onclick="closeModal('authModal')"><i class="fa-solid fa-xmark"></i></button>
       <div class="auth-modal-body">
-        <div class="auth-tabs">
-          <button class="auth-tab active" id="tabLoginBtn" onclick="switchAuthTab('login')">Đăng Nhập</button>
-          <button class="auth-tab" id="tabRegisterBtn" onclick="switchAuthTab('register')">Đăng Ký</button>
+        <div class="customer-auth-heading">
+          <div class="customer-auth-icon"><i class="fa-solid fa-bag-shopping"></i></div>
+          <h3>CỔNG KHÁCH HÀNG DI ĐỘNG VIỆT</h3>
+          <p>Đăng nhập để nhận ưu đãi tích điểm, voucher sốc và kiểm tra trạng thái đơn hàng của bạn.</p>
         </div>
 
-        <!-- Login Form -->
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tabLoginBtn" onclick="switchAuthTab('login')"><i class="fa-solid fa-user-check"></i> Đăng Nhập</button>
+          <button class="auth-tab" id="tabRegisterBtn" onclick="switchAuthTab('register')"><i class="fa-solid fa-user-plus"></i> Đăng Ký</button>
+        </div>
+
+        <!-- Login Form Khách Hàng -->
         <form id="loginForm" onsubmit="handleCustomerLogin(event)">
           <div class="form-group">
-            <label>Số điện thoại hoặc Email:</label>
-            <input type="text" id="loginUsername" placeholder="Nhập SĐT của bạn" value="0903123456" required>
+            <label>Số điện thoại hoặc Email khách hàng:</label>
+            <input type="text" id="loginUsername" placeholder="VD: 0903123456 hoặc email..." value="0903123456" required>
           </div>
           <div class="form-group">
             <label>Mật khẩu:</label>
-            <input type="password" id="loginPassword" placeholder="Nhập mật khẩu" value="123456" required>
+            <input type="password" id="loginPassword" placeholder="Nhập mật khẩu (VD: 123456)" value="123456" required>
           </div>
-          <button type="submit" class="btn-auth-submit">Đăng Nhập Ngay</button>
+          <button type="submit" class="btn-auth-submit">
+            <i class="fa-solid fa-arrow-right-to-bracket"></i> Đăng Nhập Mua Sắm
+          </button>
+          
           <div class="quick-demo-login">
-            <button type="button" class="btn-demo-acc" onclick="demoLoginVIP()">Đăng nhập nhanh (VIP Khách Hàng)</button>
+            <span class="demo-login-label"><i class="fa-solid fa-crown text-warning"></i> Chọn tài khoản khách hàng VIP có sẵn:</span>
+            <div class="demo-acc-btns">
+              <button type="button" class="btn-demo-acc" onclick="fillAndLoginCustomer('0903123456', '123456')">
+                <i class="fa-solid fa-gem text-primary"></i> <strong>Nguyễn Văn An</strong> (VIP Kim Cương - 4 đơn hàng)
+              </button>
+              <button type="button" class="btn-demo-acc" onclick="fillAndLoginCustomer('0918765432', '123456')">
+                <i class="fa-solid fa-star text-warning"></i> <strong>Trần Thị Mai</strong> (Hội Viên Vàng - 2 đơn hàng)
+              </button>
+              <button type="button" class="btn-demo-acc" onclick="fillAndLoginCustomer('0934567890', '123456')">
+                <i class="fa-solid fa-medal text-secondary"></i> <strong>Lê Hoàng Nam</strong> (Hội Viên Bạc - 1 đơn hàng)
+              </button>
+            </div>
           </div>
+
+          <button type="button" class="auth-portal-link admin-portal-link" onclick="openAdminLoginPortal()">
+            <i class="fa-solid fa-shield-halved"></i> Đăng nhập với tư cách Quản Trị Admin
+          </button>
         </form>
 
-        <!-- Register Form -->
+        <!-- Register Form Khách Hàng -->
         <form id="registerForm" onsubmit="handleCustomerRegister(event)" style="display: none;">
           <div class="form-group">
             <label>Họ và tên của bạn:</label>
-            <input type="text" id="regName" placeholder="Nguyễn Văn A" required>
+            <input type="text" id="regName" placeholder="VD: Nguyễn Văn A" required>
           </div>
           <div class="form-group">
-            <label>Số điện thoại:</label>
+            <label>Số điện thoại đặt hàng:</label>
             <input type="tel" id="regPhone" placeholder="09xxxxxxxx" required>
           </div>
           <div class="form-group">
             <label>Mật khẩu:</label>
-            <input type="password" id="regPassword" placeholder="Tạo mật khẩu" required>
+            <input type="password" id="regPassword" placeholder="Tạo mật khẩu ít nhất 6 ký tự" required>
           </div>
-          <button type="submit" class="btn-auth-submit">Tạo Tài Khoản</button>
+          <button type="submit" class="btn-auth-submit">
+            <i class="fa-solid fa-user-plus"></i> Đăng Ký Hội Viên Mới
+          </button>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7b. CỔNG ĐĂNG NHẬP BẢO MẬT ADMIN (TÁCH BIỆT HOÀN TOÀN DÀNH RIÊNG QUẢN TRỊ VIÊN) -->
+  <div class="modal-backdrop" id="adminAuthModal" style="display: none;">
+    <div class="modal-dialog modal-admin-portal">
+      <button class="modal-close-btn admin-portal-close" onclick="closeModal('adminAuthModal')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="admin-portal-login-body">
+        <div class="admin-portal-header">
+          <div class="admin-portal-shield"><i class="fa-solid fa-shield-halved"></i></div>
+          <span class="admin-portal-badge">HỆ THỐNG QUẢN TRỊ NỘI BỘ DI ĐỘNG VIỆT</span>
+          <h2>ADMIN CONTROL HUB</h2>
+          <p class="admin-portal-subtitle">Cổng đăng nhập bảo mật cấp cao dành riêng cho Quản Trị Viên hệ thống.</p>
+        </div>
+
+        <div class="admin-security-alert">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <div>
+            <strong>Lưu ý an ninh:</strong> Khách hàng không có quyền truy cập vào cổng này. Mọi thao tác đều được kiểm soát và ghi nhận nhật ký hệ thống.
+          </div>
+        </div>
+
+        <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
+          <div class="form-group admin-input-group">
+            <label><i class="fa-solid fa-envelope"></i> Email quản trị viên:</label>
+            <input type="email" id="adminLoginEmail" placeholder="admin@didongviet.vn" value="admin@didongviet.vn" required autocomplete="username">
+          </div>
+          <div class="form-group admin-input-group">
+            <label><i class="fa-solid fa-lock"></i> Mật khẩu bảo mật:</label>
+            <input type="password" id="adminLoginPassword" placeholder="Nhập mật khẩu Admin" value="admin123" required autocomplete="current-password">
+          </div>
+          <button type="submit" class="btn-admin-portal-login">
+            <i class="fa-solid fa-key"></i> Xác Thực & Vào Quản Trị Admin
+          </button>
+          
+          <div class="admin-portal-quick-demo">
+            <button type="button" class="btn-admin-quick-fill" onclick="fillAndLoginAdmin('admin@didongviet.vn', 'admin123')">
+              <i class="fa-solid fa-bolt"></i> Đăng nhập nhanh Admin (admin123)
+            </button>
+          </div>
+
+          <button type="button" class="auth-portal-link customer-portal-link" onclick="openCustomerLoginPortal()">
+            <i class="fa-solid fa-bag-shopping"></i> Đăng nhập với tư cách Khách Hàng
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7c. CUSTOMER ACCOUNT MODAL (HỒ SƠ KHÁCH HÀNG & ĐĂNG XUẤT) -->
+  <div class="modal-backdrop" id="customerAccountModal" style="display: none;">
+    <div class="modal-dialog modal-medium">
+      <button class="modal-close-btn" onclick="closeModal('customerAccountModal')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="customer-account-body">
+        <div class="account-card-header">
+          <div class="account-avatar-wrap">
+            <i class="fa-solid fa-circle-user"></i>
+          </div>
+          <div class="account-main-info">
+            <div class="account-name-row">
+              <h2 id="accModalName">Khách Hàng</h2>
+              <span class="account-tier-badge" id="accModalTier">Hội Viên</span>
+            </div>
+            <p class="account-meta">
+              <span><i class="fa-solid fa-phone"></i> <strong id="accModalPhone">---</strong></span>
+              <span><i class="fa-solid fa-envelope"></i> <span id="accModalEmail">---</span></span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Thống kê chi tiêu & đơn hàng -->
+        <div class="account-stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-receipt"></i></div>
+            <div class="stat-content">
+              <span class="stat-label">Tổng đơn hàng</span>
+              <strong class="stat-val" id="accModalOrdersCount">0 đơn</strong>
+            </div>
+          </div>
+          <div class="stat-card highlight">
+            <div class="stat-icon"><i class="fa-solid fa-coins"></i></div>
+            <div class="stat-content">
+              <span class="stat-label">Tổng chi tiêu</span>
+              <strong class="stat-val" id="accModalTotalSpent">0đ</strong>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-calendar-check"></i></div>
+            <div class="stat-content">
+              <span class="stat-label">Ngày gia nhập</span>
+              <strong class="stat-val" id="accModalJoinedAt">---</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Danh sách đơn hàng gần đây -->
+        <div class="account-orders-section">
+          <div class="section-header-row">
+            <h3><i class="fa-solid fa-clock-rotate-left"></i> Đơn Hàng Gần Đây Của Tôi</h3>
+            <button type="button" class="btn-refresh-orders" onclick="loadMyOrders()"><i class="fa-solid fa-arrows-rotate"></i> Tải lại</button>
+          </div>
+          <div class="my-orders-container" id="myOrdersList">
+            <!-- Render via JS -->
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="account-footer-actions">
+          <button type="button" class="btn-lookup-direct" onclick="closeModal('customerAccountModal'); openModal('orderLookupModal');">
+            <i class="fa-solid fa-truck-fast"></i> Tra cứu đơn khác
+          </button>
+          <button type="button" class="btn-account-logout" onclick="logoutCustomer()">
+            <i class="fa-solid fa-right-from-bracket"></i> Đăng Xuất Tài Khoản
+          </button>
+        </div>
       </div>
     </div>
   </div>

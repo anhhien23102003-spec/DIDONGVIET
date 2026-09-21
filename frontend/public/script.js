@@ -13,6 +13,7 @@ const state = {
   appliedVoucher: null,
   compareList: [],
   currentUser: JSON.parse(localStorage.getItem('ddv_user') || 'null'),
+  currentAdmin: JSON.parse(localStorage.getItem('ddv_admin') || 'null'),
   currentCategory: 'all',
   currentBrand: 'all',
   minPrice: 0,
@@ -21,6 +22,17 @@ const state = {
   heroSlideIndex: 0,
   adminData: null
 };
+let adminSessionValidated = false;
+
+function getAdminHeaders(includeJson = false) {
+  const headers = {
+    'x-user-role': 'admin',
+    'x-admin-email': state.currentAdmin?.email || '',
+    'x-admin-token': state.currentAdmin?.sessionToken || ''
+  };
+  if (includeJson) headers['Content-Type'] = 'application/json';
+  return headers;
+}
 
 // Trade-In Database for Valuation Calculation
 const TRADE_IN_MODELS = {
@@ -57,6 +69,7 @@ const TRADE_IN_MODELS = {
 // ==================== INITIALIZATION ====================
 
 document.addEventListener('DOMContentLoaded', () => {
+  validateAdminSession();
   initHeroSlider();
   initFlashSaleTimer();
   fetchProducts();
@@ -64,8 +77,52 @@ document.addEventListener('DOMContentLoaded', () => {
   populateTradeInModels();
   updateCartUI();
   updateAuthUI();
+  enforceCustomerView();
   setupLiveSearch();
+
+  if (window.location.pathname === '/admin' || window.location.hash === '#admin-login') {
+    openAdminLoginPortal();
+  }
 });
+
+function enforceCustomerView() {
+  if (!state.currentUser) return;
+
+  const adminView = document.getElementById('adminView');
+  const customerView = document.getElementById('customerView');
+  if (adminView) adminView.style.display = 'none';
+  if (customerView) customerView.style.display = 'block';
+}
+
+function hasAdminSession() {
+  return adminSessionValidated && Boolean(state.currentAdmin?.role === 'admin' && state.currentAdmin.sessionToken);
+}
+
+async function validateAdminSession() {
+  if (!(state.currentAdmin?.role === 'admin' && state.currentAdmin.sessionToken)) {
+    adminSessionValidated = false;
+    state.currentAdmin = null;
+    localStorage.removeItem('ddv_admin');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/api/auth/admin-session`, {
+      headers: getAdminHeaders()
+    });
+    if (!response.ok) throw new Error('Invalid admin session');
+    adminSessionValidated = true;
+    updateAuthUI();
+  } catch (error) {
+    adminSessionValidated = false;
+    state.currentAdmin = null;
+    localStorage.removeItem('ddv_admin');
+    const adminView = document.getElementById('adminView');
+    const customerView = document.getElementById('customerView');
+    if (adminView) adminView.style.display = 'none';
+    if (customerView) customerView.style.display = 'block';
+  }
+}
 
 // Format VND Currency
 function formatVND(amount) {
@@ -184,6 +241,29 @@ async function fetchProducts() {
   }
 }
 
+async function syncCustomerProfile() {
+  if (!state.currentUser) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/profile?phone=${encodeURIComponent(state.currentUser.phone)}`);
+    const json = await res.json();
+    if (json.success && json.data) {
+      state.currentUser = { ...state.currentUser, ...json.data };
+      localStorage.setItem('ddv_user', JSON.stringify(state.currentUser));
+      updateAuthUI();
+    }
+  } catch (err) {}
+}
+
+async function syncAllData() {
+  const tasks = [fetchProducts(), fetchStores()];
+  if (state.currentUser) tasks.push(syncCustomerProfile());
+  if (hasAdminSession()) {
+    tasks.push(loadAdminStats(), loadAdminProducts(), loadAdminOrders(), loadAdminCustomers(), loadAdminTradeIns(), loadAdminVouchers());
+  }
+  await Promise.allSettled(tasks);
+}
+
 function renderFlashSaleProducts() {
   const container = document.getElementById('flashSaleContainer');
   if (!container) return;
@@ -220,6 +300,17 @@ function renderFlashSaleProducts() {
               <span class="progress-label">🔥 Đã bán ${sold} suất</span>
             </div>
           </div>
+
+          ${hasAdminSession() ? `
+            <div class="card-admin-actions">
+              <button type="button" class="btn-admin-card-edit" onclick="event.stopPropagation(); openEditProductModal('${product.id}')" title="Sửa sản phẩm (Quyền Admin)">
+                <i class="fa-solid fa-pen-to-square"></i> Sửa
+              </button>
+              <button type="button" class="btn-admin-card-del" onclick="event.stopPropagation(); deleteProduct('${product.id}')" title="Xóa sản phẩm (Quyền Admin)">
+                <i class="fa-solid fa-trash-can"></i> Xóa
+              </button>
+            </div>
+          ` : ''}
 
           <div class="card-actions">
             <button class="btn-card-buy" onclick="addToCart('${product.id}')">
@@ -293,6 +384,17 @@ function renderMainProducts(productsToRender) {
             </span>
             <span>Kho: <strong>${product.stock || 10}</strong> máy</span>
           </div>
+
+          ${hasAdminSession() ? `
+            <div class="card-admin-actions">
+              <button type="button" class="btn-admin-card-edit" onclick="event.stopPropagation(); openEditProductModal('${product.id}')" title="Sửa sản phẩm (Quyền Admin)">
+                <i class="fa-solid fa-pen-to-square"></i> Sửa
+              </button>
+              <button type="button" class="btn-admin-card-del" onclick="event.stopPropagation(); deleteProduct('${product.id}')" title="Xóa sản phẩm (Quyền Admin)">
+                <i class="fa-solid fa-trash-can"></i> Xóa
+              </button>
+            </div>
+          ` : ''}
 
           <div class="card-actions">
             <button class="btn-card-buy" onclick="addToCart('${product.id}')">
@@ -627,6 +729,12 @@ function addToCartFromDetail(productId) {
 }
 
 function buyNowFromDetail(productId) {
+  if (!state.currentUser) {
+    showToast('Vui lòng đăng nhập tài khoản khách hàng để mua sắm.', 'error');
+    openModal('authModal');
+    return;
+  }
+
   addToCartFromDetail(productId);
   toggleCartDrawer(true);
 }
@@ -634,6 +742,12 @@ function buyNowFromDetail(productId) {
 // ==================== 7. SHOPPING CART SYSTEM ====================
 
 function addToCart(productId, storage = '', color = '') {
+  if (!state.currentUser) {
+    showToast('Vui lòng đăng nhập tài khoản khách hàng để sử dụng giỏ hàng.', 'error');
+    openModal('authModal');
+    return;
+  }
+
   const product = state.allProducts.find(p => p.id === productId);
   if (!product) return;
 
@@ -761,7 +875,31 @@ function updateCartUI() {
   }
 }
 
+function setShoppingCartVisibility(isVisible) {
+  const cartButton = document.querySelector('.btn-cart');
+  const drawer = document.getElementById('cartDrawer');
+  const overlay = document.getElementById('cartOverlay');
+
+  if (cartButton) cartButton.style.display = isVisible ? 'flex' : 'none';
+  if (!isVisible) {
+    if (drawer) drawer.classList.remove('open');
+    if (overlay) overlay.style.display = 'none';
+  }
+}
+
 function toggleCartDrawer(forceOpen = null) {
+  if (!state.currentUser) {
+    showToast('Vui lòng đăng nhập tài khoản khách hàng để sử dụng giỏ hàng.', 'error');
+    openModal('authModal');
+    return;
+  }
+
+  const adminView = document.getElementById('adminView');
+  if (adminView && adminView.style.display !== 'none') {
+    showToast('Giỏ hàng chỉ dành cho khách hàng mua sắm.', 'error');
+    return;
+  }
+
   const drawer = document.getElementById('cartDrawer');
   const overlay = document.getElementById('cartOverlay');
   if (!drawer || !overlay) return;
@@ -819,6 +957,18 @@ let selectedPaymentMethod = 'vietqr';
 let selectedDeliveryMethod = '1h';
 
 function openCheckoutModal() {
+  if (!state.currentUser) {
+    showToast('Vui lòng đăng nhập tài khoản khách hàng để đặt hàng.', 'error');
+    openModal('authModal');
+    return;
+  }
+
+  const adminView = document.getElementById('adminView');
+  if (adminView && adminView.style.display !== 'none') {
+    showToast('Admin không thể sử dụng giỏ hàng mua sắm.', 'error');
+    return;
+  }
+
   if (state.cart.length === 0) {
     showToast('Giỏ hàng của bạn đang trống!', 'error');
     return;
@@ -829,6 +979,13 @@ function openCheckoutModal() {
 
   const finalAmountEl = document.getElementById('checkoutFinalAmountText');
   if (finalAmountEl) finalAmountEl.innerText = formatVND(finalTotal);
+
+  if (state.currentUser) {
+    const nameInput = document.getElementById('checkoutName');
+    const phoneInput = document.getElementById('checkoutPhone');
+    if (nameInput && !nameInput.value) nameInput.value = state.currentUser.name || '';
+    if (phoneInput && !phoneInput.value) phoneInput.value = state.currentUser.phone || '';
+  }
 
   updateVietQRPreview(finalTotal);
   openModal('checkoutModal');
@@ -919,6 +1076,7 @@ async function handlePlaceOrder(e) {
       saveCart();
       updateCartUI();
       closeModal('checkoutModal');
+      await syncAllData();
 
       showToast(data.message, 'success');
 
@@ -1344,6 +1502,17 @@ function generateBotReply(query) {
 
 // ==================== 15. USER AUTH ====================
 
+function openAdminLoginPortal() {
+  closeModal('authModal');
+  openModal('adminAuthModal');
+}
+
+function openCustomerLoginPortal() {
+  closeModal('adminAuthModal');
+  openModal('authModal');
+  switchAuthTab('login');
+}
+
 function switchAuthTab(tab) {
   document.getElementById('tabLoginBtn').classList.toggle('active', tab === 'login');
   document.getElementById('tabRegisterBtn').classList.toggle('active', tab === 'register');
@@ -1351,63 +1520,309 @@ function switchAuthTab(tab) {
   document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
 }
 
-function handleCustomerLogin(e) {
-  e.preventDefault();
-  const phone = document.getElementById('loginUsername').value.trim();
-  state.currentUser = {
-    name: 'Khách Hàng VIP Di Động Việt',
-    phone: phone,
-    tier: 'VIP Kim Cương'
-  };
-  localStorage.setItem('ddv_user', JSON.stringify(state.currentUser));
-  updateAuthUI();
-  closeModal('authModal');
-  showToast(`Chào mừng bạn quay trở lại Di Động Việt!`);
+function handleUserHeaderClick() {
+  const adminView = document.getElementById('adminView');
+  if (adminView && adminView.style.display !== 'none') {
+    showToast('Bạn đang ở Cổng Quản Trị Admin. Hãy dùng tài khoản Admin tại cổng riêng.', 'error');
+    return;
+  }
+
+  if (state.currentUser) {
+    openCustomerAccountModal();
+  } else {
+    openModal('authModal');
+  }
 }
 
-function handleCustomerRegister(e) {
+async function handleCustomerLogin(e) {
   e.preventDefault();
+
+  const loginValue = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+
+  if (!loginValue || !password) {
+    showToast('Vui lòng nhập đầy đủ thông tin đăng nhập!', 'error');
+    return;
+  }
+
+  const submitButton = e.target.querySelector('button[type="submit"]');
+  if (submitButton) submitButton.disabled = true;
+  try {
+    const response = await fetch(`${API_BASE}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ login: loginValue, password })
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      showToast(result.message || 'Đăng nhập thất bại!', 'error');
+      return;
+    }
+
+    state.currentUser = result.data;
+    localStorage.setItem('ddv_user', JSON.stringify(state.currentUser));
+    enforceCustomerView();
+    updateAuthUI();
+    closeModal('authModal');
+    showToast(`Chào mừng ${result.data.name} quay trở lại Di Động Việt!`);
+  } catch (error) {
+    showToast('Không thể kết nối máy chủ. Vui lòng thử lại!', 'error');
+  } finally {
+    if (submitButton) submitButton.disabled = false;
+  }
+}
+
+async function handleCustomerRegister(e) {
+  e.preventDefault();
+
   const name = document.getElementById('regName').value.trim();
   const phone = document.getElementById('regPhone').value.trim();
-  state.currentUser = { name, phone, tier: 'Hội Viên Mới' };
-  localStorage.setItem('ddv_user', JSON.stringify(state.currentUser));
-  updateAuthUI();
-  closeModal('authModal');
-  showToast(`Đăng ký thành công! Chào mừng ${name}`);
+  const password = document.getElementById('regPassword').value;
+
+  if (!name || !phone || !password) {
+    showToast('Vui lòng điền đầy đủ họ tên, số điện thoại và mật khẩu!', 'error');
+    return;
+  }
+
+  const submitButton = e.target.querySelector('button[type="submit"]');
+  if (submitButton) submitButton.disabled = true;
+  try {
+    const response = await fetch(`${API_BASE}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, phone, password })
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      showToast(result.message || 'Đăng ký thất bại!', 'error');
+      if (response.status === 409) switchAuthTab('login');
+      return;
+    }
+
+    state.currentUser = result.data;
+    localStorage.setItem('ddv_user', JSON.stringify(state.currentUser));
+    enforceCustomerView();
+    updateAuthUI();
+    closeModal('authModal');
+    showToast(`Đăng ký thành công! Chào mừng ${name}`);
+  } catch (error) {
+    showToast('Không thể kết nối máy chủ. Vui lòng thử lại!', 'error');
+  } finally {
+    if (submitButton) submitButton.disabled = false;
+  }
+}
+
+async function fillAndLoginCustomer(phone, password) {
+  const userField = document.getElementById('loginUsername');
+  const passField = document.getElementById('loginPassword');
+  if (userField) userField.value = phone;
+  if (passField) passField.value = password;
+
+  try {
+    const response = await fetch(`${API_BASE}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ login: phone, password })
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      showToast(result.message || 'Đăng nhập thất bại!', 'error');
+      return;
+    }
+
+    state.currentUser = result.data;
+    localStorage.setItem('ddv_user', JSON.stringify(state.currentUser));
+    enforceCustomerView();
+    updateAuthUI();
+    closeModal('authModal');
+    showToast(`Đăng nhập thành công! Xin chào ${result.data.name} (${result.data.tier})`);
+  } catch (error) {
+    showToast('Không thể kết nối máy chủ. Vui lòng thử lại!', 'error');
+  }
 }
 
 function demoLoginVIP() {
-  state.currentUser = {
-    name: 'Nguyễn Văn An (VIP)',
-    phone: '0903123456',
-    tier: 'VIP Kim Cương'
-  };
-  localStorage.setItem('ddv_user', JSON.stringify(state.currentUser));
+  fillAndLoginCustomer('0903123456', '123456');
+}
+
+async function openCustomerAccountModal() {
+  if (!state.currentUser) {
+    openModal('authModal');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/profile?phone=${encodeURIComponent(state.currentUser.phone)}`);
+    const json = await res.json();
+    if (json.success && json.data) {
+      state.currentUser = { ...state.currentUser, ...json.data };
+      localStorage.setItem('ddv_user', JSON.stringify(state.currentUser));
+    }
+  } catch (err) {}
+
+  const u = state.currentUser;
+  const nameEl = document.getElementById('accModalName');
+  const tierEl = document.getElementById('accModalTier');
+  const phoneEl = document.getElementById('accModalPhone');
+  const emailEl = document.getElementById('accModalEmail');
+  const ordersCountEl = document.getElementById('accModalOrdersCount');
+  const totalSpentEl = document.getElementById('accModalTotalSpent');
+  const joinedAtEl = document.getElementById('accModalJoinedAt');
+
+  if (nameEl) nameEl.innerText = u.name || 'Khách Hàng DDV';
+  if (tierEl) {
+    tierEl.innerText = u.tier || 'Hội Viên Mới';
+    tierEl.className = 'account-tier-badge ' + (u.tier ? u.tier.toLowerCase().replace(/\s+/g, '-') : '');
+  }
+  if (phoneEl) phoneEl.innerText = u.phone || 'Chưa cập nhật';
+  if (emailEl) emailEl.innerText = u.email || `${u.phone}@didongviet.vn`;
+  if (ordersCountEl) ordersCountEl.innerText = `${u.ordersCount || 0} đơn hàng`;
+  if (totalSpentEl) totalSpentEl.innerText = formatVND(u.totalSpent || 0);
+  if (joinedAtEl) joinedAtEl.innerText = u.joinedAt || 'Thành viên thân thiết';
+
+  loadMyOrders();
+  openModal('customerAccountModal');
+}
+
+async function loadMyOrders() {
+  const container = document.getElementById('myOrdersList');
+  if (!container || !state.currentUser) return;
+
+  container.innerHTML = '<div class="orders-loading"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải đơn hàng...</div>';
+
+  try {
+    const res = await fetch(`${API_BASE}/api/orders?phone=${encodeURIComponent(state.currentUser.phone)}`);
+    const json = await res.json();
+    if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+      container.innerHTML = json.data.map(order => {
+        const statusMap = {
+          pending: { label: 'Chờ xử lý', class: 'pending' },
+          confirmed: { label: 'Đã xác nhận', class: 'pending' },
+          shipping: { label: 'Đang giao hàng', class: 'shipping' },
+          completed: { label: 'Đã hoàn thành', class: 'completed' },
+          cancelled: { label: 'Đã hủy', class: 'cancelled' }
+        };
+        const st = statusMap[order.status] || { label: order.status, class: 'pending' };
+        const itemsSummary = (order.items || []).map(it => `
+          <div class="my-order-item">
+            <img src="${it.image}" alt="${it.name}" onerror="handleImgError(this)">
+            <div class="item-info">
+              <strong>${it.name}</strong>
+              <span>${it.color || ''} ${it.storage ? '| ' + it.storage : ''} x${it.quantity || 1}</span>
+            </div>
+            <strong class="item-price">${formatVND(it.price * (it.quantity || 1))}</strong>
+          </div>
+        `).join('');
+
+        return `
+          <div class="my-order-card">
+            <div class="my-order-head">
+              <div class="order-code-date">
+                <strong>#${order.id}</strong>
+                <span class="order-date"><i class="fa-regular fa-clock"></i> ${order.createdAt}</span>
+              </div>
+              <span class="status-badge ${st.class}">${st.label}</span>
+            </div>
+            <div class="my-order-items-list">
+              ${itemsSummary}
+            </div>
+            <div class="my-order-footer">
+              <span>Phương thức: <strong>${order.paymentMethod === 'vietqr' ? 'VietQR Pro' : 'Tiền mặt khi nhận'}</strong></span>
+              <div class="order-total-block">
+                <span>Tổng thanh toán:</span>
+                <strong class="total-price">${formatVND(order.totalAmount)}</strong>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } else {
+      container.innerHTML = `
+        <div class="empty-orders-state">
+          <i class="fa-solid fa-box-open"></i>
+          <p>Bạn chưa có đơn hàng nào với số điện thoại này.</p>
+          <button class="btn-shop-now" onclick="closeModal('customerAccountModal')">Khám Phá Mua Sắm Ngay</button>
+        </div>
+      `;
+    }
+  } catch (err) {
+    container.innerHTML = '<div class="orders-error">Không thể tải danh sách đơn hàng.</div>';
+  }
+}
+
+async function logoutCustomer(e) {
+  if (e) e.stopPropagation();
+
+  try {
+    await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST' });
+  } catch (err) {}
+
+  state.currentUser = null;
+  localStorage.removeItem('ddv_user');
+  state.appliedVoucher = null;
+  closeModal('customerAccountModal');
+  setShoppingCartVisibility(false);
   updateAuthUI();
-  closeModal('authModal');
-  showToast('Đã đăng nhập tài khoản Khách Hàng VIP Kim Cương!');
+  showToast('Đã đăng xuất tài khoản khách hàng thành công!');
 }
 
 function updateAuthUI() {
   const el = document.getElementById('userHeaderAction');
+  const quickLogoutBtn = document.getElementById('btnQuickLogout');
+  const adminSwitchButton = document.getElementById('headerAdminBtn');
   if (!el) return;
 
   if (state.currentUser) {
+    const displayName = state.currentUser.name ? state.currentUser.name.split(' ').pop() : 'Tài khoản';
     el.innerHTML = `
-      <span class="sub">${state.currentUser.tier || 'Thành viên'}</span>
-      <strong>${state.currentUser.name.split(' ').pop()}</strong>
+      <span class="sub user-tier-badge-sub">${state.currentUser.tier || 'Thành viên'}</span>
+      <strong>${displayName}</strong>
     `;
+    if (quickLogoutBtn) quickLogoutBtn.style.display = 'inline-flex';
+    if (adminSwitchButton) adminSwitchButton.style.display = 'none';
+    setShoppingCartVisibility(true);
   } else {
     el.innerHTML = `
       <span class="sub">Xin chào</span>
       <strong>Tài khoản</strong>
     `;
+    if (quickLogoutBtn) quickLogoutBtn.style.display = 'none';
+    if (adminSwitchButton) adminSwitchButton.style.display = hasAdminSession() ? 'inline-flex' : 'none';
+    setShoppingCartVisibility(false);
   }
 }
 
 // ==================== 16. ADMIN PORTAL LOGIC ====================
 
 let currentAdminTab = 'dashboard';
+
+function handleAdminBtnClick() {
+  const customerView = document.getElementById('customerView');
+  const adminView = document.getElementById('adminView');
+
+  if (customerView && customerView.style.display === 'none' && adminView && adminView.style.display !== 'none') {
+    switchToAdminPortal();
+    return;
+  }
+
+  if (hasAdminSession()) {
+    switchToAdminPortal();
+    return;
+  }
+  openModal('adminAuthModal');
+}
+
+function switchToAdminPortal() {
+  if (!hasAdminSession()) {
+    openModal('adminAuthModal');
+    return;
+  }
+
+  const adminView = document.getElementById('adminView');
+  if (adminView && adminView.style.display === 'none') {
+    toggleAdminView();
+  }
+}
 
 function toggleAdminView() {
   const customerView = document.getElementById('customerView');
@@ -1420,12 +1835,27 @@ function toggleAdminView() {
     // Back to Customer
     adminView.style.display = 'none';
     customerView.style.display = 'block';
+    setShoppingCartVisibility(true);
     label.innerText = 'Quản Trị Admin';
   } else {
+    if (!hasAdminSession()) {
+      openModal('adminAuthModal');
+      return;
+    }
     // Switch to Admin
+    closeModal('authModal');
+    closeModal('customerAccountModal');
     customerView.style.display = 'none';
     adminView.style.display = 'block';
+    setShoppingCartVisibility(false);
     label.innerText = 'Về Shop';
+
+    // Cập nhật thông tin Admin trong sidebar
+    const adminNameEl = document.getElementById('adminSidebarName');
+    const adminEmailEl = document.getElementById('adminSidebarEmail');
+    if (adminNameEl && state.currentAdmin) adminNameEl.innerText = state.currentAdmin.name || 'Super Admin DDV';
+    if (adminEmailEl && state.currentAdmin) adminEmailEl.innerText = state.currentAdmin.email || 'admin@didongviet.vn';
+
     loadAdminStats();
     loadAdminProducts();
     loadAdminOrders();
@@ -1433,6 +1863,101 @@ function toggleAdminView() {
     loadAdminTradeIns();
     loadAdminVouchers();
   }
+}
+
+async function handleAdminLogin(e) {
+  e.preventDefault();
+  if (state.currentUser) {
+    showToast('Bạn đang đăng nhập tài khoản khách hàng. Vui lòng đăng xuất khách hàng trước khi vào Admin.', 'error');
+    return;
+  }
+
+  const email = document.getElementById('adminLoginEmail').value.trim();
+  const password = document.getElementById('adminLoginPassword').value;
+  const submitButton = e.target.querySelector('button[type="submit"]');
+  if (submitButton) submitButton.disabled = true;
+
+  try {
+    const response = await fetch(`${API_BASE}/api/auth/admin-login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      showToast(result.message || 'Đăng nhập Admin thất bại!', 'error');
+      return;
+    }
+
+    state.currentAdmin = result.data;
+    adminSessionValidated = true;
+    localStorage.setItem('ddv_admin', JSON.stringify(state.currentAdmin));
+    updateAuthUI();
+    closeModal('adminAuthModal');
+    toggleAdminView();
+    showToast('Đăng nhập Admin thành công!');
+  } catch (error) {
+    showToast('Không thể kết nối máy chủ. Vui lòng thử lại!', 'error');
+  } finally {
+    if (submitButton) submitButton.disabled = false;
+  }
+}
+
+async function fillAndLoginAdmin(email, password) {
+  if (state.currentUser) {
+    showToast('Vui lòng đăng xuất tài khoản khách hàng trước khi đăng nhập Admin.', 'error');
+    return;
+  }
+
+  const emailInput = document.getElementById('adminLoginEmail');
+  const passInput = document.getElementById('adminLoginPassword');
+  if (emailInput) emailInput.value = email;
+  if (passInput) passInput.value = password;
+
+  try {
+    const response = await fetch(`${API_BASE}/api/auth/admin-login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      showToast(result.message || 'Đăng nhập Admin thất bại!', 'error');
+      return;
+    }
+
+    state.currentAdmin = result.data;
+    adminSessionValidated = true;
+    localStorage.setItem('ddv_admin', JSON.stringify(state.currentAdmin));
+    updateAuthUI();
+    closeModal('adminAuthModal');
+    toggleAdminView();
+    showToast('Đăng nhập Admin thành công!');
+  } catch (error) {
+    showToast('Lỗi kết nối máy chủ. Vui lòng thử lại!', 'error');
+  }
+}
+
+async function logoutAdmin() {
+  try {
+    await fetch(`${API_BASE}/api/auth/admin-logout`, {
+      method: 'POST',
+      headers: { 'x-admin-token': state.currentAdmin?.sessionToken || '' }
+    });
+  } catch (err) {}
+
+  state.currentAdmin = null;
+  adminSessionValidated = false;
+  localStorage.removeItem('ddv_admin');
+  const adminView = document.getElementById('adminView');
+  const customerView = document.getElementById('customerView');
+  const label = document.getElementById('adminSwitchLabel');
+  if (adminView) adminView.style.display = 'none';
+  if (customerView) customerView.style.display = 'block';
+  updateAuthUI();
+  await syncAllData();
+  if (label) label.innerText = 'Quản Trị Admin';
+  showToast('Đã đăng xuất Quản trị Admin thành công!');
 }
 
 function switchAdminTab(tab, el) {
@@ -1456,18 +1981,14 @@ function switchAdminTab(tab, el) {
   if (titleEl) titleEl.innerText = titles[tab] || 'Admin Hub';
 }
 
-function refreshAdminData() {
-  loadAdminStats();
-  loadAdminProducts();
-  loadAdminOrders();
-  loadAdminCustomers();
-  loadAdminTradeIns();
+async function refreshAdminData() {
+  await syncAllData();
   showToast('Đã làm mới dữ liệu quản trị');
 }
 
 async function loadAdminStats() {
   try {
-    const res = await fetch(`${API_BASE}/api/admin/stats`);
+    const res = await fetch(`${API_BASE}/api/admin/stats`, { headers: getAdminHeaders() });
     const json = await res.json();
     if (json.success) {
       const d = json.data;
@@ -1599,16 +2120,30 @@ function previewAdminProdImage(url) {
 }
 
 function openAddProductModal() {
+  if (!hasAdminSession()) {
+    showToast('Bạn không có quyền thực hiện thao tác này! Chỉ Quản Trị Viên (Admin) mới có quyền thêm sản phẩm.', 'error');
+    return;
+  }
   document.getElementById('adminProductForm').reset();
   document.getElementById('adminProdId').value = '';
-  document.getElementById('adminProductModalTitle').innerText = 'Thêm Sản Phẩm Mới';
+  document.getElementById('adminProductModalTitle').innerText = 'Thêm Sản Phẩm Mới (Quyền Quản Trị)';
   previewAdminProdImage('');
   openModal('adminProductModal');
 }
 
 function openEditProductModal(id) {
-  const p = adminProductsList.find(x => x.id === id);
-  if (!p) return;
+  if (!hasAdminSession()) {
+    showToast('Bạn không có quyền thực hiện thao tác này! Chỉ Quản Trị Viên (Admin) mới có quyền sửa sản phẩm.', 'error');
+    return;
+  }
+  let p = adminProductsList.find(x => x.id === id);
+  if (!p && Array.isArray(state.allProducts)) {
+    p = state.allProducts.find(x => x.id === id);
+  }
+  if (!p) {
+    showToast('Không tìm thấy thông tin sản phẩm!', 'error');
+    return;
+  }
 
   document.getElementById('adminProdId').value = p.id;
   document.getElementById('adminProdName').value = p.name;
@@ -1630,6 +2165,11 @@ function openEditProductModal(id) {
 
 async function handleSaveAdminProduct(e) {
   e.preventDefault();
+  if (!hasAdminSession()) {
+    showToast('Bạn không có quyền lưu sản phẩm! Chỉ Quản Trị Viên (Admin) mới được phép.', 'error');
+    return;
+  }
+
   const id = document.getElementById('adminProdId').value;
   const name = document.getElementById('adminProdName').value.trim();
   const brand = document.getElementById('adminProdBrand').value;
@@ -1658,7 +2198,12 @@ async function handleSaveAdminProduct(e) {
   try {
     const res = await fetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-role': 'admin',
+        'x-admin-email': state.currentAdmin.email || 'admin@didongviet.vn',
+        'x-admin-token': state.currentAdmin.sessionToken || ''
+      },
       body: JSON.stringify(payload)
     });
     const data = await res.json();
@@ -1666,11 +2211,9 @@ async function handleSaveAdminProduct(e) {
     if (data.success) {
       showToast(data.message);
       closeModal('adminProductModal');
-      loadAdminProducts();
-      fetchProducts();
-      loadAdminStats();
+      await syncAllData();
     } else {
-      showToast(data.message, 'error');
+      showToast(data.message || 'Lỗi lưu sản phẩm', 'error');
     }
   } catch (err) {
     showToast('Lỗi lưu sản phẩm', 'error');
@@ -1678,16 +2221,28 @@ async function handleSaveAdminProduct(e) {
 }
 
 async function deleteProduct(id) {
+  if (!hasAdminSession()) {
+    showToast('Bạn không có quyền xóa sản phẩm! Chỉ Quản Trị Viên (Admin) mới có quyền này.', 'error');
+    return;
+  }
+
   if (!confirm('Bạn có chắc muốn xóa sản phẩm này khỏi hệ thống Di Động Việt?')) return;
 
   try {
-    const res = await fetch(`${API_BASE}/api/products/${id}`, { method: 'DELETE' });
+    const res = await fetch(`${API_BASE}/api/products/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'x-user-role': 'admin',
+        'x-admin-email': state.currentAdmin.email || 'admin@didongviet.vn',
+        'x-admin-token': state.currentAdmin.sessionToken || ''
+      }
+    });
     const data = await res.json();
     if (data.success) {
       showToast(data.message);
-      loadAdminProducts();
-      fetchProducts();
-      loadAdminStats();
+      await syncAllData();
+    } else {
+      showToast(data.message || 'Lỗi xóa sản phẩm', 'error');
     }
   } catch (err) {
     showToast('Lỗi xóa sản phẩm', 'error');
@@ -1699,7 +2254,7 @@ let adminOrdersList = [];
 
 async function loadAdminOrders() {
   try {
-    const res = await fetch(`${API_BASE}/api/orders`);
+    const res = await fetch(`${API_BASE}/api/orders`, { headers: getAdminHeaders() });
     const json = await res.json();
     if (json.success) {
       adminOrdersList = json.data;
@@ -1752,7 +2307,7 @@ async function updateOrderStatus(orderId, status) {
   try {
     const res = await fetch(`${API_BASE}/api/orders/${orderId}/status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAdminHeaders(true),
       body: JSON.stringify({ status })
     });
     const data = await res.json();
@@ -1769,7 +2324,7 @@ async function updateOrderStatus(orderId, status) {
 // Admin Customers
 async function loadAdminCustomers() {
   try {
-    const res = await fetch(`${API_BASE}/api/customers`);
+    const res = await fetch(`${API_BASE}/api/customers`, { headers: getAdminHeaders() });
     const json = await res.json();
     if (json.success) {
       const tbody = document.getElementById('adminCustomersTableBody');
@@ -1794,7 +2349,7 @@ async function loadAdminCustomers() {
 // Admin Trade-Ins
 async function loadAdminTradeIns() {
   try {
-    const res = await fetch(`${API_BASE}/api/trade-in`);
+    const res = await fetch(`${API_BASE}/api/trade-in`, { headers: getAdminHeaders() });
     const json = await res.json();
     if (json.success) {
       const tbody = document.getElementById('adminTradeInsTableBody');
@@ -1819,7 +2374,7 @@ async function loadAdminTradeIns() {
 // Admin Vouchers
 async function loadAdminVouchers() {
   try {
-    const res = await fetch(`${API_BASE}/api/vouchers`);
+    const res = await fetch(`${API_BASE}/api/vouchers`, { headers: getAdminHeaders() });
     const json = await res.json();
     if (json.success) {
       const tbody = document.getElementById('adminVouchersTableBody');
