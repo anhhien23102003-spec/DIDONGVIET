@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "build": "npm install --prefix backend",
     "start": "node backend/server.js",
     "dev": "node --watch backend/server.js",
     "backend": "node backend/server.js"
