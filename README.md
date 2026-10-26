@@ -72,3 +72,23 @@ npm install
 node server.js
 ```
 Truy cập trình duyệt tại: **http://localhost:5000**
+
+## Deploy lên Jenkins và AWS EC2
+
+Repo có sẵn `Jenkinsfile` để build Docker image, kiểm tra HTTP smoke test, rồi deploy trên EC2. Vì Jenkins controller hiện chạy trên Windows, pipeline dùng chính EC2 Ubuntu làm Linux build agent có label `linux-docker`; image được build và chạy trên EC2, không cần Docker Desktop trên Windows.
+
+### Chuẩn bị EC2
+
+1. Trên Ubuntu EC2, cài Java 17 trở lên và Docker Engine. User `ubuntu` phải chạy được `docker` không cần `sudo` (thường bằng cách thêm user vào nhóm `docker`, rồi đăng nhập lại; nhóm này có quyền tương đương root).
+2. `t3.micro` có ít RAM cho Jenkins agent, build Docker và app cùng lúc. Nếu gặp lỗi hết bộ nhớ, dừng các dịch vụ không cần thiết hoặc đổi instance sang loại có ít nhất 2 GiB RAM.
+3. Trong Security Group, cho phép SSH (TCP 22) chỉ từ public IP của Jenkins controller; mở TCP 5000 chỉ từ IP của bạn để kiểm tra website. Không mở cổng Jenkins 8080 ra Internet công cộng.
+
+### Chuẩn bị Jenkins
+
+1. Đưa mã nguồn và `Jenkinsfile` lên GitHub; tạo Jenkins Pipeline job, chọn **Pipeline script from SCM**, cấu hình Git URL/branch `main` và script path `Jenkinsfile`.
+2. Cài plugin **SSH Build Agents** và **Credentials Binding**. Trong **Manage Jenkins → Nodes**, thêm node mới với label `linux-docker`, chọn phương thức **Launch agents via SSH**, nhập Public DNS của EC2 và remote root directory như `/home/ubuntu/jenkins-agent`.
+3. Tạo Jenkins credential kiểu **SSH Username with private key** cho node SSH, dùng username `ubuntu` và private key EC2. Cấu hình host key verification an toàn; không tắt kiểm tra host key. Node phải kết nối được từ Jenkins controller và lệnh `docker` chạy được.
+4. Tạo credential kiểu **Secret text**, ID `shopphone-admin-password`, với mật khẩu admin mạnh. Không lưu private key hay mật khẩu trong Git.
+5. Chạy Build. Jenkins sẽ checkout source trên agent EC2, build/test image rồi thay container `didong`. Mật khẩu admin chỉ được truyền từ Jenkins Credentials khi deploy.
+
+Pipeline giữ dữ liệu JSON trong Docker volume `didong-data` qua các lần deploy và thử khôi phục image trước nếu app mới không qua health check. Truy cập website tại `http://<EC2_PUBLIC_DNS>:5000`; với website public, nên đặt reverse proxy/TLS trước app thay vì mở cổng này cho toàn Internet.

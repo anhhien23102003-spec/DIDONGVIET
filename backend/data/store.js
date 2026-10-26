@@ -2,7 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const DATA_DIR = path.join(__dirname);
+const DATA_DIR = process.env.DATA_DIR || __dirname;
 const DATA_FILE = path.join(DATA_DIR, 'store.json');
 
 const INITIAL_DATA = {
@@ -1025,4 +1025,3 @@ module.exports = {
   saveData,
   INITIAL_DATA
 };
-
