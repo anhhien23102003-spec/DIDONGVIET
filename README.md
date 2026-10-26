@@ -69,9 +69,13 @@ npm install
 
 ### 2. Chạy Server:
 ```bash
+copy .env.example .env
+# Mở .env và đặt ADMIN_PASSWORD thành một mật khẩu mạnh, riêng tư
 node server.js
 ```
 Truy cập trình duyệt tại: **http://localhost:5000**
+
+Đăng nhập Admin yêu cầu biến môi trường `ADMIN_PASSWORD`; ứng dụng không dùng mật khẩu mặc định. Không đưa mật khẩu thật vào Git.
 
 ## Deploy lên Jenkins và AWS EC2
 

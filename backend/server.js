@@ -161,8 +161,15 @@ app.post('/api/auth/login', (req, res) => {
 app.post('/api/auth/admin-login', (req, res) => {
   const { email, password } = req.body;
   const adminEmail = (process.env.ADMIN_EMAIL || 'admin@didongviet.vn').toLowerCase();
-  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+  const adminPassword = process.env.ADMIN_PASSWORD;
   const cleanEmail = String(email || '').trim().toLowerCase();
+
+  if (!adminPassword) {
+    return res.status(503).json({
+      success: false,
+      message: 'Đăng nhập quản trị chưa được cấu hình mật khẩu. Vui lòng liên hệ quản trị viên.'
+    });
+  }
 
   if (cleanEmail !== adminEmail || password !== adminPassword) {
     const data = loadData();

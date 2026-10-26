@@ -1903,41 +1903,6 @@ async function handleAdminLogin(e) {
   }
 }
 
-async function fillAndLoginAdmin(email, password) {
-  if (state.currentUser) {
-    showToast('Vui lòng đăng xuất tài khoản khách hàng trước khi đăng nhập Admin.', 'error');
-    return;
-  }
-
-  const emailInput = document.getElementById('adminLoginEmail');
-  const passInput = document.getElementById('adminLoginPassword');
-  if (emailInput) emailInput.value = email;
-  if (passInput) passInput.value = password;
-
-  try {
-    const response = await fetch(`${API_BASE}/api/auth/admin-login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    const result = await response.json();
-    if (!response.ok || !result.success) {
-      showToast(result.message || 'Đăng nhập Admin thất bại!', 'error');
-      return;
-    }
-
-    state.currentAdmin = result.data;
-    adminSessionValidated = true;
-    localStorage.setItem('ddv_admin', JSON.stringify(state.currentAdmin));
-    updateAuthUI();
-    closeModal('adminAuthModal');
-    toggleAdminView();
-    showToast('Đăng nhập Admin thành công!');
-  } catch (error) {
-    showToast('Lỗi kết nối máy chủ. Vui lòng thử lại!', 'error');
-  }
-}
-
 async function logoutAdmin() {
   try {
     await fetch(`${API_BASE}/api/auth/admin-logout`, {
